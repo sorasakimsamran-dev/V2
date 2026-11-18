@@ -11,15 +11,15 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="My wallet">
-    <meta name="theme-color" content="#090d16">
+    <meta name="theme-color" content="#070b14">
     <link id="pwaManifestLink" rel="manifest" href="">
     <link id="pwaAppleIconLink" rel="apple-touch-icon" href="">
     <link id="pwaFaviconLink" rel="icon" type="image/png" href="">
 
-    <!-- Google Font: Prompt -->
+    <!-- Google Fonts: Plus Jakarta Sans + Noto Sans Thai (Fintech 2026 Typography) -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -33,35 +33,41 @@
 
     <style>
         * {
-            font-family: 'Prompt', sans-serif;
+            font-family: 'Plus Jakarta Sans', 'Noto Sans Thai', -apple-system, BlinkMacSystemFont, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
         body {
-            background-color: #090d16;
+            background-color: #070b14;
             background-image:
-                radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.18) 0px, transparent 50%),
-                radial-gradient(at 100% 0%, rgba(219, 39, 119, 0.14) 0px, transparent 50%),
-                radial-gradient(at 50% 100%, rgba(16, 185, 129, 0.10) 0px, transparent 55%);
+                radial-gradient(circle at 12% 0%, rgba(99, 102, 241, 0.22) 0%, transparent 45%),
+                radial-gradient(circle at 88% 8%, rgba(236, 72, 153, 0.16) 0%, transparent 42%),
+                radial-gradient(circle at 50% 100%, rgba(14, 165, 233, 0.14) 0%, transparent 55%);
             color: #f8fafc;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: env(safe-area-inset-bottom);
+            padding-top: max(1rem, env(safe-area-inset-top));
+            padding-bottom: max(6rem, env(safe-area-inset-bottom));
             overflow-x: hidden;
         }
         .glass-card {
-            background: rgba(30, 41, 59, 0.58);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.09);
+            background: rgba(15, 23, 42, 0.62);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 12px 36px -12px rgba(2, 6, 23, 0.7);
         }
         .glass-modal {
-            background: rgba(15, 23, 42, 0.96);
-            backdrop-filter: blur(24px);
-            -webkit-backdrop-filter: blur(24px);
-            border: 1px solid rgba(255, 255, 255, 0.14);
+            background: rgba(11, 17, 32, 0.96);
+            backdrop-filter: blur(28px);
+            -webkit-backdrop-filter: blur(28px);
+            border: 1px solid rgba(255, 255, 255, 0.12);
         }
-        .balance-gradient {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 52%, #db2777 100%);
-            box-shadow: 0 20px 45px -15px rgba(124, 58, 237, 0.5);
+        .fintech-hero-card {
+            background: linear-gradient(135deg, #4f46e5 0%, #9333ea 48%, #db2777 100%);
+            box-shadow:
+                0 24px 48px -16px rgba(99, 102, 241, 0.5),
+                inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+        }
+        .tabular-nums {
+            font-variant-numeric: tabular-nums;
         }
         .custom-scrollbar::-webkit-scrollbar {
             width: 5px;
@@ -73,25 +79,25 @@
         }
     </style>
 </head>
-<body class="min-h-screen pb-28 selection:bg-indigo-500 selection:text-white">
+<body class="min-h-screen selection:bg-indigo-500 selection:text-white">
 
-    <!-- Global Toast Notification (No alert() used anywhere) -->
-    <div id="toastBanner" class="fixed top-5 left-1/2 -translate-x-1/2 z-[250] transform -translate-y-32 opacity-0 transition-all duration-300 pointer-events-none w-[92%] max-w-sm">
-        <div class="glass-modal px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 border border-indigo-500/35">
+    <!-- Global Toast Notification (Replaces native alert()) -->
+    <div id="toastBanner" class="fixed top-5 left-1/2 -translate-x-1/2 z-[260] transform -translate-y-32 opacity-0 transition-all duration-300 pointer-events-none w-[92%] max-w-sm">
+        <div class="glass-modal px-4 py-3 rounded-2xl shadow-2xl flex items-center space-x-3 border border-indigo-500/40">
             <span id="toastIcon" class="text-xl shrink-0">✅</span>
             <span id="toastMessage" class="text-xs sm:text-sm font-medium text-white leading-snug">แจ้งเตือนระบบ</span>
         </div>
     </div>
 
-    <!-- Main Application Wrapper -->
-    <div class="max-w-md md:max-w-2xl mx-auto px-4 pt-5 space-y-5">
+    <!-- Main Application Container -->
+    <div class="max-w-md md:max-w-2xl mx-auto px-4 pt-2 space-y-5">
 
         <!-- Top Navigation Header -->
         <header class="flex items-center justify-between gap-2">
-            <div class="flex items-center space-x-3 min-w-0">
-                <!-- User Avatar Button -->
+            <div class="flex items-center space-x-2.5 min-w-0">
+                <!-- User Profile Avatar Button -->
                 <button type="button" id="avatarHeaderBtn" onclick="handleAvatarClick()" title="จัดการโปรไฟล์"
-                    class="w-12 h-12 rounded-2xl bg-gradient-to-br from-indigo-500/25 to-purple-500/25 border border-indigo-500/40 flex items-center justify-center overflow-hidden shadow-inner transition active:scale-95 shrink-0 cursor-pointer">
+                    class="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-br from-indigo-500/25 to-fuchsia-500/25 border border-indigo-400/35 flex items-center justify-center overflow-hidden shadow-inner transition active:scale-95 shrink-0 cursor-pointer">
                     <img id="avatarHeaderImg" src="" alt="Profile" class="w-full h-full object-cover hidden">
                     <span id="avatarHeaderFallback" class="text-xl font-bold text-white">👛</span>
                 </button>
@@ -99,36 +105,44 @@
                     <div class="flex items-center space-x-1.5">
                         <!-- 5-Tap Stealth Admin Trigger -->
                         <h1 id="appBrandTitle" onclick="handleStealthTitleTap()"
-                            class="text-lg sm:text-xl font-extrabold tracking-tight text-white cursor-pointer select-none active:scale-95 transition truncate">
+                            class="text-base sm:text-xl font-extrabold tracking-tight text-white cursor-pointer select-none active:scale-95 transition truncate">
                             My wallet
                         </h1>
+                        <!-- Admin Badge (Visible ONLY to Admin / Stealth Admin) -->
                         <span id="stealthAdminBadge" onclick="openAdminModal()"
-                            class="hidden px-2 py-0.5 text-[10px] font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full cursor-pointer shrink-0">
+                            class="hidden px-2 py-0.5 text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-full cursor-pointer shrink-0">
                             🛡️ Admin
                         </span>
                     </div>
-                    <p id="userSubtitleText" class="text-xs text-slate-400 truncate">สถานะ: ยังไม่ได้เข้าสู่ระบบ</p>
+                    <p id="userSubtitleText" class="text-[11px] sm:text-xs text-slate-400 truncate">สถานะ: ยังไม่ได้เข้าสู่ระบบ</p>
                 </div>
             </div>
 
-            <!-- Action Controls -->
-            <div class="flex items-center space-x-1.5 sm:space-x-2 shrink-0">
+            <!-- Right Action Controls -->
+            <div class="flex items-center space-x-1.5 shrink-0">
+                <!-- ADMIN-ONLY Cloud Sync Status Pill (100% Hidden from regular users & logged-out screens) -->
+                <button type="button" id="adminCloudSyncPill" onclick="openAdminModal(true)" title="จัดการการซิงค์ Firebase Cloud (เฉพาะแอดมิน)"
+                    class="hidden px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-semibold items-center space-x-1 transition active:scale-95 cursor-pointer">
+                    <span id="cloudSyncDotIcon">⚪</span>
+                    <span id="cloudSyncLabelText">โหมดในเครื่อง</span>
+                </button>
+
                 <!-- Desktop & Mobile PWA Install Button -->
                 <button type="button" id="headerInstallBtn" onclick="handleInstallButtonClick()" title="ติดตั้งลงหน้าจอ Desktop / มือถือ"
                     class="px-2.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/35 text-emerald-300 text-xs font-semibold flex items-center space-x-1 transition active:scale-95 cursor-pointer">
                     <span>🖥️</span>
-                    <span class="hidden sm:inline">ติดตั้งลงหน้าจอ</span>
+                    <span class="hidden md:inline">ติดตั้งลงหน้าจอ</span>
                 </button>
 
                 <!-- Privacy Mode Masking Toggle -->
                 <button type="button" onclick="togglePrivacyMode()" title="ซ่อน/แสดงยอดเงิน"
-                    class="w-9 h-9 rounded-xl bg-slate-800/85 hover:bg-slate-700 border border-slate-700 text-slate-200 flex items-center justify-center text-sm transition active:scale-95 cursor-pointer">
+                    class="w-9 h-9 rounded-xl bg-slate-800/85 hover:bg-slate-700 border border-slate-700/80 text-slate-200 flex items-center justify-center text-sm transition active:scale-95 cursor-pointer">
                     <span id="privacyToggleIcon">👁️</span>
                 </button>
 
                 <!-- Manual PIN Lock Button (Visible only when PIN is set) -->
                 <button type="button" id="headerPinLockBtn" onclick="activatePinLockScreen()" title="ล็อกหน้าจอ PIN"
-                    class="hidden w-9 h-9 rounded-xl bg-slate-800/85 hover:bg-slate-700 border border-slate-700 text-amber-300 flex items-center justify-center text-sm transition active:scale-95 cursor-pointer">
+                    class="hidden w-9 h-9 rounded-xl bg-slate-800/85 hover:bg-slate-700 border border-slate-700/80 text-amber-300 flex items-center justify-center text-sm transition active:scale-95 cursor-pointer">
                     <span>🔐</span>
                 </button>
 
@@ -140,40 +154,42 @@
             </div>
         </header>
 
-        <!-- Primary Balance Summary Card -->
-        <section class="balance-gradient rounded-3xl p-6 text-white relative overflow-hidden">
-            <div class="absolute -right-10 -top-10 w-40 h-40 rounded-full bg-white/10 blur-2xl pointer-events-none"></div>
-            <div class="flex justify-between items-start gap-2">
+        <!-- Primary Balance Summary Card (Fintech 2026 Hero Card) -->
+        <section class="fintech-hero-card rounded-3xl p-6 text-white relative overflow-hidden">
+            <div class="absolute -right-12 -top-12 w-44 h-44 rounded-full bg-white/15 blur-2xl pointer-events-none"></div>
+            <div class="absolute -left-10 -bottom-10 w-36 h-36 rounded-full bg-indigo-950/30 blur-xl pointer-events-none"></div>
+
+            <div class="flex justify-between items-start gap-2 relative z-10">
                 <div>
-                    <p class="text-xs font-medium uppercase tracking-wider text-white/80">ยอดเงินคงเหลือสุทธิ</p>
-                    <h2 id="netBalanceDisplay" class="text-3xl sm:text-4xl font-extrabold mt-1 tracking-tight">฿0.00</h2>
+                    <p class="text-[11px] font-semibold uppercase tracking-widest text-white/80">ยอดเงินคงเหลือสุทธิ</p>
+                    <h2 id="netBalanceDisplay" class="text-3xl sm:text-4xl font-extrabold mt-1 tracking-tight tabular-nums">฿0.00</h2>
                 </div>
                 <div id="balanceCardActions" class="hidden flex flex-col items-end space-y-1.5">
                     <button type="button" onclick="openProfileModal()"
-                        class="px-2.5 py-1.5 rounded-xl bg-black/25 hover:bg-black/40 border border-white/15 text-[11px] font-medium flex items-center space-x-1 transition active:scale-95 cursor-pointer">
+                        class="px-2.5 py-1.5 rounded-xl bg-black/25 hover:bg-black/40 border border-white/20 text-[11px] font-medium flex items-center space-x-1 transition active:scale-95 cursor-pointer">
                         <span>⚙️</span>
                         <span>ตั้งค่าโปรไฟล์</span>
                     </button>
                     <button type="button" onclick="openCustomConfirmModal('reset')"
-                        class="px-2.5 py-1 rounded-xl bg-rose-500/35 hover:bg-rose-500/50 border border-rose-300/30 text-[10px] font-semibold text-rose-100 flex items-center space-x-1 transition active:scale-95 cursor-pointer">
+                        class="px-2.5 py-1 rounded-xl bg-rose-500/35 hover:bg-rose-500/50 border border-rose-200/30 text-[10px] font-semibold text-rose-100 flex items-center space-x-1 transition active:scale-95 cursor-pointer">
                         <span>🔄</span>
                         <span>รีเซ็ตยอดเป็น 0</span>
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-white/20">
-                <div class="bg-black/20 rounded-2xl p-3 backdrop-blur-sm">
+            <div class="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-white/20 relative z-10">
+                <div class="bg-black/20 rounded-2xl p-3 backdrop-blur-md border border-white/10">
                     <div class="flex items-center space-x-1.5 text-emerald-300 text-xs font-medium">
                         <span>⬇️ รายรับรวม</span>
                     </div>
-                    <p id="totalIncomeDisplay" class="text-base sm:text-lg font-bold mt-0.5 text-white">฿0.00</p>
+                    <p id="totalIncomeDisplay" class="text-base sm:text-lg font-bold mt-0.5 text-white tabular-nums">฿0.00</p>
                 </div>
-                <div class="bg-black/20 rounded-2xl p-3 backdrop-blur-sm">
+                <div class="bg-black/20 rounded-2xl p-3 backdrop-blur-md border border-white/10">
                     <div class="flex items-center space-x-1.5 text-rose-300 text-xs font-medium">
                         <span>⬆️ รายจ่ายรวม</span>
                     </div>
-                    <p id="totalExpenseDisplay" class="text-base sm:text-lg font-bold mt-0.5 text-white">฿0.00</p>
+                    <p id="totalExpenseDisplay" class="text-base sm:text-lg font-bold mt-0.5 text-white tabular-nums">฿0.00</p>
                 </div>
             </div>
         </section>
@@ -181,7 +197,7 @@
         <!-- Monthly Budget Limit & Dynamic Alert Bar -->
         <section class="glass-card rounded-3xl p-4 sm:p-5 relative overflow-hidden">
             <div id="budgetLockOverlay" onclick="openAuthModal('login')"
-                class="absolute inset-0 z-10 bg-slate-950/80 backdrop-blur-[2px] flex items-center justify-center cursor-pointer">
+                class="absolute inset-0 z-10 bg-slate-950/82 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
                 <span class="text-xs font-semibold text-indigo-300 bg-slate-900/95 border border-indigo-500/35 px-3.5 py-2 rounded-xl shadow">
                     🔒 กรุณาเข้าสู่ระบบก่อนใช้งานงบประมาณ
                 </span>
@@ -196,7 +212,7 @@
             <div class="space-y-2">
                 <div class="flex justify-between items-center text-xs">
                     <span id="budgetSummaryText" class="text-slate-300">ใช้ไปเดือนนี้ ฿0.00 / ยังไม่ได้ตั้งงบ</span>
-                    <span id="budgetPercentBadge" class="font-bold text-emerald-400">0%</span>
+                    <span id="budgetPercentBadge" class="font-bold text-emerald-400 tabular-nums">0%</span>
                 </div>
                 <div class="w-full h-2.5 bg-slate-900 rounded-full overflow-hidden border border-slate-800">
                     <div id="budgetProgressFill" class="h-full bg-emerald-500 transition-all duration-500 w-0"></div>
@@ -205,10 +221,10 @@
             </div>
         </section>
 
-        <!-- 1-Tap Quick Add Section (Preset + Custom Quick Buttons) -->
+        <!-- 1-Tap Quick Add Section -->
         <section class="glass-card rounded-3xl p-4 sm:p-5 relative overflow-hidden">
             <div id="quickAddLockOverlay" onclick="openAuthModal('login')"
-                class="absolute inset-0 z-10 bg-slate-950/80 backdrop-blur-[2px] flex items-center justify-center cursor-pointer">
+                class="absolute inset-0 z-10 bg-slate-950/82 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
                 <span class="text-xs font-semibold text-indigo-300 bg-slate-900/95 border border-indigo-500/35 px-3.5 py-2 rounded-xl shadow">
                     🔒 กรุณาเข้าสู่ระบบก่อนใช้งานปุ่มด่วน 1-Tap
                 </span>
@@ -234,16 +250,16 @@
         <section class="glass-card rounded-3xl p-5 relative overflow-hidden">
             <!-- 100% Permission Lock Overlay when NOT logged in -->
             <div id="mainFormLockOverlay"
-                class="absolute inset-0 z-20 bg-slate-950/88 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none">
+                class="absolute inset-0 z-20 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center select-none">
                 <div class="w-14 h-14 rounded-2xl bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-3xl mb-3 shadow-lg">
                     🔒
                 </div>
                 <h4 class="text-base font-bold text-white mb-1">🔒 กรุณาเข้าสู่ระบบก่อนใช้งาน</h4>
                 <p class="text-xs text-slate-300 max-w-xs mb-4 leading-relaxed">
-                    ระบบล็อกการบันทึกรายการและสแกนสลิปไว้ ข้อมูลของคุณจะถูกเก็บรักษาแยกบัญชีอย่างปลอดภัยด้วย Dual-Sync
+                    ระบบล็อกการบันทึกรายการและสแกนสลิปไว้ ข้อมูลของคุณจะถูกเก็บรักษาแยกบัญชีและปลอดภัย 100%
                 </p>
                 <button type="button" onclick="openAuthModal('login')"
-                    class="px-5 py-2.5 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold shadow-lg transition active:scale-95 cursor-pointer">
+                    class="px-6 py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white text-xs font-semibold shadow-lg transition active:scale-95 cursor-pointer">
                     🔑 เข้าสู่ระบบ / สมัครสมาชิก
                 </button>
             </div>
@@ -275,7 +291,7 @@
                     <div>
                         <label class="block text-xs text-slate-300 mb-1">จำนวนเงิน (บาท)</label>
                         <input type="number" id="newTxAmount" step="0.01" min="0.01" placeholder="0.00"
-                            class="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl px-3.5 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-indigo-500">
+                            class="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl px-3.5 py-2.5 text-white font-bold text-sm tabular-nums focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-xs text-slate-300 mb-1">วันที่</label>
@@ -307,7 +323,7 @@
         <!-- Savings Goals Tracker -->
         <section class="glass-card rounded-3xl p-5 relative overflow-hidden">
             <div id="goalsLockOverlay" onclick="openAuthModal('login')"
-                class="absolute inset-0 z-10 bg-slate-950/80 backdrop-blur-[2px] flex items-center justify-center cursor-pointer">
+                class="absolute inset-0 z-10 bg-slate-950/82 backdrop-blur-[3px] flex items-center justify-center cursor-pointer">
                 <span class="text-xs font-semibold text-indigo-300 bg-slate-900/95 border border-indigo-500/35 px-3.5 py-2 rounded-xl shadow">
                     🔒 กรุณาเข้าสู่ระบบก่อนใช้งานเป้าหมายการออม
                 </span>
@@ -407,7 +423,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MODAL 1: Login & Register Modal (No hidden 'required' inputs)       -->
+    <!-- MODAL 1: Login & Register Modal (Clean User Experience)             -->
     <!-- =================================================================== -->
     <div id="authModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[110] hidden flex items-center justify-center p-4">
         <div class="glass-modal rounded-3xl max-w-sm w-full p-6 space-y-4 border border-white/15 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
@@ -430,19 +446,27 @@
             </div>
 
             <!-- Inline Error Alert -->
-            <div id="authValidationAlert" class="hidden p-3 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs leading-relaxed"></div>
+            <div id="authValidationAlert" class="hidden p-3.5 rounded-2xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-xs leading-relaxed space-y-2">
+                <p id="authValidationText"></p>
+                <div id="authAccountNotFoundActions" class="hidden pt-1">
+                    <button type="button" id="quickRegisterFromAlertBtn" onclick="prefillRegisterFromNotFound()"
+                        class="w-full py-2 px-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-semibold transition cursor-pointer">
+                        ✨ สร้างบัญชีนี้ทันที
+                    </button>
+                </div>
+            </div>
 
             <form id="authAccountForm" onsubmit="handleAuthFormSubmit(event)" class="space-y-3" novalidate>
                 <div id="registerDisplayNameGroup" class="hidden">
                     <label class="block text-xs text-slate-300 mb-1">ชื่อผู้ใช้ / นามแฝง</label>
-                    <input type="text" id="authDisplayNameInput" placeholder="เช่น สมชาย สายออม"
+                    <input type="text" id="authDisplayNameInput" placeholder="เช่น เบสท์ หรือ สมชาย สายออม"
                         class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
                 </div>
 
                 <div>
                     <label class="block text-xs text-slate-300 mb-1">อีเมล หรือ ชื่อบัญชี</label>
                     <input type="text" id="authEmailInput" autocapitalize="none" autocorrect="off" spellcheck="false"
-                        placeholder="เช่น user@email.com หรือ admin"
+                        placeholder="เช่น username หรือ user@email.com"
                         class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
                 </div>
 
@@ -486,9 +510,9 @@
                 </button>
             </form>
 
-            <div class="relative flex py-1 items-center">
+            <div class="relative flex py-0.5 items-center">
                 <div class="flex-grow border-t border-slate-800"></div>
-                <span class="flex-shrink mx-3 text-[11px] text-slate-500">หรือเข้าสู่ระบบด่วน</span>
+                <span class="flex-shrink mx-3 text-[11px] text-slate-500">หรือเข้าสู่ระบบด่วนในเครื่อง</span>
                 <div class="flex-grow border-t border-slate-800"></div>
             </div>
 
@@ -506,7 +530,7 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MODAL 2: Profile, Security, PIN, Backup & Database Guard Modal      -->
+    <!-- MODAL 2: Profile, Security, PIN & Backup Modal                      -->
     <!-- =================================================================== -->
     <div id="profileModal" class="fixed inset-0 bg-black/80 backdrop-blur-md z-[110] hidden flex items-center justify-center p-4">
         <div class="glass-modal rounded-3xl max-w-md w-full p-6 space-y-4 border border-white/15 shadow-2xl max-h-[92vh] overflow-y-auto custom-scrollbar">
@@ -516,15 +540,14 @@
                     class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
             </div>
 
-            <!-- Database Protection Status Badge -->
             <div class="bg-emerald-500/15 border border-emerald-500/35 rounded-2xl p-3 flex items-center space-x-2.5">
                 <span class="text-lg shrink-0">🛡️</span>
-                <div class="min-w-0">
+                <div>
                     <p class="text-xs font-semibold text-emerald-300 leading-snug">
-                        🛡️ ระบบปกป้องฐานข้อมูล Dual-Sync & Auto-Migration พร้อมทำงาน
+                        ระบบปกป้องฐานข้อมูลอัตโนมัติ (Auto-Sync & Backup)
                     </p>
                     <p class="text-[10px] text-emerald-200/75 mt-0.5">
-                        ซิงค์ข้อมูลอัตโนมัติระหว่าง localStorage และ IndexedDB (MyWalletDB) บัญชีและรายการไม่สูญหายเมื่ออัปเดตเวอร์ชัน
+                        ข้อมูลบัญชีและธุรกรรมของคุณถูกจัดเก็บและซิงค์อย่างปลอดภัย
                     </p>
                 </div>
             </div>
@@ -577,7 +600,7 @@
 
             <!-- Cross-Device JSON Backup & Restore -->
             <div class="pt-3 border-t border-slate-800 space-y-2">
-                <p class="text-xs font-semibold text-slate-300">☁️ สำรองและกู้คืนข้อมูลข้ามอุปกรณ์ (.json)</p>
+                <p class="text-xs font-semibold text-slate-300">📦 สำรองและกู้คืนข้อมูลแบบไฟล์ (.json)</p>
                 <div class="grid grid-cols-2 gap-2">
                     <button type="button" onclick="exportFullJsonBackup()"
                         class="py-2.5 px-3 rounded-xl bg-indigo-500/20 hover:bg-indigo-500/30 border border-indigo-500/35 text-indigo-300 text-xs font-semibold transition cursor-pointer">
@@ -621,7 +644,7 @@
                     <div>
                         <label class="block text-xs text-slate-300 mb-1">จำนวนเงิน (บาท)</label>
                         <input type="number" id="editTxAmountField" step="0.01" min="0.01"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-3.5 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-indigo-500">
+                            class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-3.5 py-2.5 text-white font-bold text-sm tabular-nums focus:outline-none focus:border-indigo-500">
                     </div>
                     <div>
                         <label class="block text-xs text-slate-300 mb-1">วันที่</label>
@@ -702,7 +725,7 @@
                         จำนวนเงินที่อ่านได้ (บาท) <span class="text-[10px] text-slate-400 font-normal">*ตรวจสอบ/แก้ไขได้</span>
                     </label>
                     <input type="number" id="slipAmountInput" step="0.01" min="0.01" placeholder="ระบุจำนวนเงิน เช่น 150.00"
-                        class="w-full bg-slate-900 border-2 border-indigo-500/70 rounded-2xl px-4 py-2.5 text-white font-extrabold text-xl focus:outline-none focus:border-indigo-400">
+                        class="w-full bg-slate-900 border-2 border-indigo-500/70 rounded-2xl px-4 py-2.5 text-white font-extrabold text-xl tabular-nums focus:outline-none focus:border-indigo-400">
                 </div>
 
                 <div>
@@ -745,7 +768,7 @@
             <div>
                 <label class="block text-xs text-slate-300 mb-1">วงเงินรายจ่ายสูงสุดต่อเดือน (บาท)</label>
                 <input type="number" id="budgetLimitInput" min="0" step="100" placeholder="เช่น 15000"
-                    class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-indigo-500">
+                    class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white font-bold text-sm tabular-nums focus:outline-none focus:border-indigo-500">
             </div>
             <button type="button" onclick="saveBudgetLimit()"
                 class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-lg cursor-pointer">
@@ -773,12 +796,12 @@
                 <div>
                     <label class="block text-xs text-slate-300 mb-1">เป้าหมายจำนวนเงิน (บาท)</label>
                     <input type="number" id="newGoalTargetInput" min="1" step="100" placeholder="50000"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white font-bold text-sm focus:outline-none focus:border-indigo-500">
+                        class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white font-bold text-sm tabular-nums focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs text-slate-300 mb-1">ยอดออมเริ่มต้น (บาท)</label>
                     <input type="number" id="newGoalInitialInput" min="0" step="1" value="0"
-                        class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white text-sm focus:outline-none focus:border-indigo-500">
+                        class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-4 py-2.5 text-white text-sm tabular-nums focus:outline-none focus:border-indigo-500">
                 </div>
                 <button type="submit"
                     class="w-full py-3 rounded-2xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold text-sm shadow-lg cursor-pointer">
@@ -815,7 +838,7 @@
                     <div>
                         <label class="block text-xs text-slate-300 mb-1">จำนวนเงิน (บาท)</label>
                         <input type="number" id="quickBtnAmountInput" min="1" step="0.01" placeholder="50"
-                            class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-3.5 py-2.5 text-white font-bold text-sm focus:outline-none">
+                            class="w-full bg-slate-900 border border-slate-700 rounded-2xl px-3.5 py-2.5 text-white font-bold text-sm tabular-nums focus:outline-none">
                     </div>
                     <div>
                         <label class="block text-xs text-slate-300 mb-1">ประเภท</label>
@@ -922,48 +945,95 @@
     </div>
 
     <!-- =================================================================== -->
-    <!-- MODAL 9: Stealth Admin Control Panel                                -->
+    <!-- MODAL 9: Stealth Admin Control Panel (Includes Cloud Sync & Reset)  -->
     <!-- =================================================================== -->
     <div id="adminControlModal" class="fixed inset-0 bg-black/85 backdrop-blur-md z-[135] hidden flex items-center justify-center p-4">
-        <div class="glass-modal rounded-3xl max-w-lg w-full p-6 space-y-4 border border-amber-500/35 max-h-[92vh] flex flex-col">
+        <div class="glass-modal rounded-3xl max-w-lg w-full p-6 space-y-4 border border-amber-500/40 max-h-[92vh] overflow-y-auto custom-scrollbar shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-3">
                 <div class="flex items-center space-x-2">
                     <span class="text-xl">🛡️</span>
                     <div>
-                        <h2 class="text-base font-bold text-white">Stealth Admin Security Panel</h2>
-                        <p class="text-[11px] text-amber-300/85">ตรวจสอบบัญชีผู้ใช้งาน สถานะ Dual-Storage และความปลอดภัยระบบ</p>
+                        <h2 class="text-base font-bold text-white">Stealth Admin Control Panel</h2>
+                        <p class="text-[11px] text-amber-300/85">จัดการ Firebase Cloud Sync ตรวจสอบสมาชิก และรีเซ็ตฐานข้อมูล</p>
                     </div>
                 </div>
                 <button type="button" onclick="closeModalById('adminControlModal')"
-                    class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 flex items-center justify-center text-sm cursor-pointer">✕</button>
+                    class="w-8 h-8 rounded-full bg-slate-800 text-slate-400 hover:text-white flex items-center justify-center text-sm cursor-pointer">✕</button>
             </div>
 
+            <!-- Admin Quick Telemetry Cards -->
             <div class="grid grid-cols-3 gap-2 text-center">
                 <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5">
                     <p class="text-[10px] text-slate-400">สมาชิกทั้งหมด</p>
-                    <p id="adminTotalUsersCount" class="text-base font-bold text-white">0</p>
+                    <p id="adminTotalUsersCount" class="text-base font-bold text-white tabular-nums">0</p>
                 </div>
                 <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5">
                     <p class="text-[10px] text-slate-400">Dual-Sync Health</p>
                     <p id="adminSyncHealthStatus" class="text-xs font-bold text-emerald-400 mt-1">Healthy ✓</p>
                 </div>
                 <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-2.5">
-                    <p class="text-[10px] text-slate-400">Schema Version</p>
-                    <p class="text-base font-bold text-indigo-400">v2.0</p>
+                    <p class="text-[10px] text-slate-400">Cloud Firestore</p>
+                    <p id="adminCloudStatusText" class="text-xs font-bold text-slate-400 mt-1">โหมดในเครื่อง</p>
                 </div>
             </div>
 
-            <div class="flex-1 overflow-y-auto custom-scrollbar space-y-2 pr-1">
-                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">👥 รายชื่อบัญชีในระบบ (เข้ารหัส - ไม่แสดงรหัสผ่านจริง)</h3>
-                <div id="adminRegisteredUsersContainer" class="space-y-2"></div>
+            <!-- ADMIN-ONLY: Firebase Cloud Firestore Sync Configuration Section -->
+            <div id="adminCloudConfigSection" class="bg-slate-900/90 border border-sky-500/30 rounded-2xl p-4 space-y-3">
+                <div class="flex items-center justify-between gap-2">
+                    <div class="flex items-center space-x-2">
+                        <span class="text-lg">☁️</span>
+                        <div>
+                            <h3 class="text-xs sm:text-sm font-bold text-white">Firebase Cloud Sync (เฉพาะแอดมิน)</h3>
+                            <p id="cloudModalProjectInfo" class="text-[10px] text-slate-400">
+                                เชื่อมต่อครั้งเดียว ระบบจะซิงค์ข้อมูลให้ผู้ใช้ทุกคนในเบื้องหลังอัตโนมัติ
+                            </p>
+                        </div>
+                    </div>
+                    <span id="cloudModalBadge" class="px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 shrink-0">
+                        ⚪ โหมดในเครื่อง
+                    </span>
+                </div>
+
+                <p id="cloudModalLastSyncTime" class="hidden text-[10px] text-emerald-400"></p>
+                <div id="cloudModalErrorAlert" class="hidden p-2.5 rounded-xl bg-rose-500/15 border border-rose-500/40 text-rose-200 text-[11px] leading-relaxed"></div>
+
+                <textarea id="firebaseConfigTextarea" rows="4" spellcheck="false"
+                    placeholder='วางโค้ด const firebaseConfig = { apiKey: "...", projectId: "...", ... }; ที่นี่'
+                    class="w-full bg-slate-950 border border-slate-700/90 rounded-xl p-2.5 text-[11px] font-mono text-sky-200 focus:outline-none focus:border-sky-500 custom-scrollbar"></textarea>
+
+                <button type="button" id="connectFirebaseBtn" onclick="handleSaveAndConnectFirebase()"
+                    class="w-full py-2.5 rounded-xl bg-gradient-to-r from-sky-600 to-indigo-600 hover:from-sky-500 hover:to-indigo-500 text-white font-semibold text-xs shadow-lg transition active:scale-[0.98] cursor-pointer">
+                    🔗 เชื่อมต่อและเริ่มซิงค์ Cloud ทันที
+                </button>
+
+                <div id="cloudConnectedActionsGroup" class="hidden grid grid-cols-2 gap-2 pt-1">
+                    <button type="button" onclick="triggerManualCloudSync()"
+                        class="py-2 px-3 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/35 text-emerald-300 text-[11px] font-semibold transition cursor-pointer">
+                        🔄 ซิงค์ข้อมูลเดี๋ยวนี้
+                    </button>
+                    <button type="button" onclick="disconnectFirebaseCloud()"
+                        class="py-2 px-3 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/35 text-rose-300 text-[11px] font-semibold transition cursor-pointer">
+                        🔌 ตัดการเชื่อมต่อ Cloud
+                    </button>
+                </div>
             </div>
 
-            <div class="pt-3 border-t border-slate-800 flex justify-between items-center">
-                <span class="text-[10px] text-slate-400">MyWalletDB + localStorage Synced</span>
-                <button type="button" onclick="openCustomConfirmModal('systemReset')"
-                    class="px-3 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-300 text-xs font-semibold transition cursor-pointer">
-                    ⚠️ รีเซ็ตระบบทั้งหมด
+            <!-- Registered Users List (Encrypted Passwords - Never Shows Plaintext) -->
+            <div class="space-y-2">
+                <h3 class="text-xs font-bold text-slate-300 uppercase tracking-wider">👥 รายชื่อบัญชีในระบบ (เข้ารหัส - ไม่แสดงรหัสผ่านจริง)</h3>
+                <div id="adminRegisteredUsersContainer" class="space-y-2 max-h-48 overflow-y-auto custom-scrollbar pr-1"></div>
+            </div>
+
+            <!-- Admin Global Reset Actions -->
+            <div class="pt-3 border-t border-slate-800 space-y-2">
+                <button type="button" onclick="openCustomConfirmModal('resetAllUsers')"
+                    class="w-full py-2.5 px-4 rounded-2xl bg-rose-600/20 hover:bg-rose-600/35 border border-rose-500/45 text-rose-200 text-xs font-bold flex items-center justify-center space-x-2 transition active:scale-95 cursor-pointer">
+                    <span>🗑️</span>
+                    <span>รีเซ็ตข้อมูลผู้ใช้งานทั้งหมด</span>
                 </button>
+                <p class="text-[10px] text-slate-400 text-center">
+                    ล้างบัญชีสมาชิกทั่วไปและรายการธุรกรรมทั้งหมด (ทั้งในเครื่องและบน Cloud) เพื่อเริ่มต้นใหม่ที่ ฿0.00
+                </p>
             </div>
         </div>
     </div>
@@ -1024,14 +1094,32 @@
         </button>
     </div>
 
-    <script>
+    <!-- =================================================================== -->
+    <!-- FIREBASE MODULAR SDK v10.12.2 & APPLICATION LOGIC                   -->
+    <!-- =================================================================== -->
+    <script type="module">
+        import { initializeApp, deleteApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import {
+            getFirestore,
+            collection,
+            doc,
+            getDoc,
+            getDocs,
+            setDoc,
+            deleteDoc,
+            onSnapshot
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
         // =========================================================================
-        // 1. FIXED STORAGE KEYS & DUAL-STORAGE SYNCHRONIZATION (localStorage + IDB)
+        // 1. FIXED STORAGE KEYS, ONE-TIME PRE-SYNC RESET & DUAL-STORAGE ENGINE
         // =========================================================================
+        const PRESYNC_RESET_FLAG_KEY = 'mywallet_presync_reset_v2026_clean_v2';
+
         const FIXED_KEYS = {
             USERS_REGISTRY: 'mywallet_users_registry',
             ACTIVE_USER: 'mywallet_active_user',
-            USER_DATA_PREFIX: 'mywallet_user_data_'
+            USER_DATA_PREFIX: 'mywallet_user_data_',
+            FIREBASE_CONFIG: 'mywallet_firebase_config'
         };
 
         const IDB_CONFIG = {
@@ -1040,7 +1128,58 @@
             VERSION: 1
         };
 
-        // Open IndexedDB ('MyWalletDB', objectStore 'wallet_store')
+        // One-Time Pre-Sync Reset: wipes old local user accounts & IndexedDB once while preserving firebase_config
+        async function executeOneTimePreSyncResetIfNeeded() {
+            try {
+                const alreadyCleaned = window.localStorage.getItem(PRESYNC_RESET_FLAG_KEY);
+                if (alreadyCleaned === 'true') {
+                    return false;
+                }
+
+                // Preserve existing Firebase config if already configured
+                const preservedFirebaseConfig = window.localStorage.getItem(FIXED_KEYS.FIREBASE_CONFIG);
+
+                // Clear localStorage user keys
+                window.localStorage.removeItem(FIXED_KEYS.USERS_REGISTRY);
+                window.localStorage.removeItem(FIXED_KEYS.ACTIVE_USER);
+                const keysToRemove = [];
+                for (let i = 0; i < window.localStorage.length; i++) {
+                    const k = window.localStorage.key(i);
+                    if (k && k.startsWith(FIXED_KEYS.USER_DATA_PREFIX)) {
+                        keysToRemove.push(k);
+                    }
+                }
+                keysToRemove.forEach(k => window.localStorage.removeItem(k));
+
+                if (preservedFirebaseConfig) {
+                    window.localStorage.setItem(FIXED_KEYS.FIREBASE_CONFIG, preservedFirebaseConfig);
+                }
+
+                // Clear sessionStorage active session
+                try {
+                    window.sessionStorage.removeItem(FIXED_KEYS.ACTIVE_USER);
+                } catch (e) {}
+
+                // Delete IndexedDB database MyWalletDB so stale records never resurrect
+                await new Promise((resolve) => {
+                    if (!window.indexedDB) {
+                        resolve();
+                        return;
+                    }
+                    const delReq = window.indexedDB.deleteDatabase(IDB_CONFIG.DB_NAME);
+                    delReq.onsuccess = () => resolve();
+                    delReq.onerror = () => resolve();
+                    delReq.onblocked = () => resolve();
+                });
+
+                window.localStorage.setItem(PRESYNC_RESET_FLAG_KEY, 'true');
+                return true;
+            } catch (err) {
+                console.warn('Pre-sync reset notice:', err);
+                return false;
+            }
+        }
+
         function openWalletIndexedDB() {
             return new Promise((resolve) => {
                 try {
@@ -1108,7 +1247,6 @@
             } catch (err) {}
         }
 
-        // Dual-Write helper: writes simultaneously to localStorage & IndexedDB
         async function dualSave(key, data) {
             try {
                 window.localStorage.setItem(key, JSON.stringify(data));
@@ -1118,7 +1256,6 @@
             await idbWrite(key, data);
         }
 
-        // Dual-Read helper: reads from localStorage, restores from IndexedDB if missing/empty
         async function dualLoadWithRestore(key) {
             let localVal = null;
             try {
@@ -1131,12 +1268,10 @@
             }
 
             if (localVal !== null) {
-                // Keep IndexedDB mirrored in background
                 idbWrite(key, localVal);
                 return localVal;
             }
 
-            // If localStorage is missing/empty, restore from IndexedDB
             const idbVal = await idbRead(key);
             if (idbVal !== null) {
                 try {
@@ -1149,7 +1284,7 @@
         }
 
         // =========================================================================
-        // 2. NON-DESTRUCTIVE AUTO-MIGRATION & SCHEMA NORMALIZER
+        // 2. NON-DESTRUCTIVE AUTO-MIGRATION & CLOUD MERGE NORMALIZER
         // =========================================================================
         const DEFAULT_QUICK_ADDS = [
             { id: 'qa_coffee', emoji: '☕', label: 'กาแฟ', amount: 60, type: 'expense', category: '🍔 อาหารและเครื่องดื่ม' },
@@ -1158,22 +1293,23 @@
         ];
 
         function migrateAndNormalizeUserData(rawData) {
-            // Default v2 schema
             const normalized = {
                 transactions: [],
+                deletedTxIds: [],
+                lastResetAt: '',
                 budget: 0,
                 goals: [],
+                deletedGoalIds: [],
                 quickAdds: JSON.parse(JSON.stringify(DEFAULT_QUICK_ADDS)),
+                deletedQuickIds: [],
                 pin: '',
                 privacyMode: false,
-                schemaVersion: 2
+                updatedAt: '',
+                schemaVersion: 5
             };
 
-            if (!rawData) {
-                return normalized;
-            }
+            if (!rawData) return normalized;
 
-            // Legacy Format Case 1: rawData was stored directly as an Array of transactions
             if (Array.isArray(rawData)) {
                 normalized.transactions = rawData
                     .filter(item => item && typeof item === 'object')
@@ -1183,12 +1319,12 @@
                         amount: Number(item.amount) || 0,
                         category: item.category || '📦 อื่นๆ',
                         note: item.note || '',
-                        date: item.date || new Date().toISOString().split('T')[0]
+                        date: item.date || new Date().toISOString().split('T')[0],
+                        updatedAt: item.updatedAt || ''
                     }));
                 return normalized;
             }
 
-            // Modern / Partial Object Format Case 2: merge missing fields without destroying existing data
             if (typeof rawData === 'object') {
                 if (Array.isArray(rawData.transactions)) {
                     normalized.transactions = rawData.transactions.map(item => ({
@@ -1197,8 +1333,17 @@
                         amount: Number(item.amount) || 0,
                         category: item.category || '📦 อื่นๆ',
                         note: item.note || '',
-                        date: item.date || new Date().toISOString().split('T')[0]
+                        date: item.date || new Date().toISOString().split('T')[0],
+                        updatedAt: item.updatedAt || ''
                     }));
+                }
+
+                if (Array.isArray(rawData.deletedTxIds)) {
+                    normalized.deletedTxIds = rawData.deletedTxIds.map(String).slice(-250);
+                }
+
+                if (typeof rawData.lastResetAt === 'string') {
+                    normalized.lastResetAt = rawData.lastResetAt;
                 }
 
                 if (typeof rawData.budget === 'number' && !isNaN(rawData.budget)) {
@@ -1212,12 +1357,21 @@
                         id: g.id || Date.now() + Math.random(),
                         title: g.title || 'เป้าหมายการออม',
                         target: Number(g.target) || 1000,
-                        current: Number(g.current) || 0
+                        current: Number(g.current) || 0,
+                        updatedAt: g.updatedAt || ''
                     }));
+                }
+
+                if (Array.isArray(rawData.deletedGoalIds)) {
+                    normalized.deletedGoalIds = rawData.deletedGoalIds.map(String).slice(-100);
                 }
 
                 if (Array.isArray(rawData.quickAdds) && rawData.quickAdds.length > 0) {
                     normalized.quickAdds = rawData.quickAdds;
+                }
+
+                if (Array.isArray(rawData.deletedQuickIds)) {
+                    normalized.deletedQuickIds = rawData.deletedQuickIds.map(String).slice(-100);
                 }
 
                 if (typeof rawData.pin === 'string') {
@@ -1228,13 +1382,16 @@
                     normalized.privacyMode = rawData.privacyMode;
                 }
 
-                normalized.schemaVersion = 2;
+                if (typeof rawData.updatedAt === 'string') {
+                    normalized.updatedAt = rawData.updatedAt;
+                }
+
+                normalized.schemaVersion = 5;
             }
 
             return normalized;
         }
 
-        // Normalize registry whether stored as an object map { [email]: user } or legacy array
         function normalizeUsersRegistry(rawRegistry) {
             const map = {};
             if (!rawRegistry) return map;
@@ -1258,8 +1415,553 @@
             return map;
         }
 
+        function mergeWalletDataNonDestructive(localRaw, cloudRaw) {
+            const local = migrateAndNormalizeUserData(localRaw);
+            const cloud = migrateAndNormalizeUserData(cloudRaw);
+
+            const latestReset = [local.lastResetAt, cloud.lastResetAt]
+                .filter(Boolean)
+                .sort()
+                .pop() || '';
+
+            const deletedTxSet = new Set([
+                ...(local.deletedTxIds || []).map(String),
+                ...(cloud.deletedTxIds || []).map(String)
+            ]);
+
+            const txMap = new Map();
+            [...local.transactions, ...cloud.transactions].forEach(tx => {
+                const idStr = String(tx.id);
+                if (deletedTxSet.has(idStr)) return;
+                if (latestReset && tx.updatedAt && tx.updatedAt < latestReset) return;
+
+                const existing = txMap.get(idStr);
+                if (!existing) {
+                    txMap.set(idStr, { ...tx });
+                } else if ((tx.updatedAt || '') > (existing.updatedAt || '')) {
+                    txMap.set(idStr, { ...tx });
+                }
+            });
+
+            const mergedTransactions = Array.from(txMap.values()).sort((a, b) => {
+                const dateDiff = new Date(b.date) - new Date(a.date);
+                if (dateDiff !== 0 && !isNaN(dateDiff)) return dateDiff;
+                return Number(b.id) - Number(a.id);
+            });
+
+            const deletedGoalSet = new Set([
+                ...(local.deletedGoalIds || []).map(String),
+                ...(cloud.deletedGoalIds || []).map(String)
+            ]);
+            const goalMap = new Map();
+            [...local.goals, ...cloud.goals].forEach(g => {
+                const idStr = String(g.id);
+                if (deletedGoalSet.has(idStr)) return;
+                if (latestReset && g.updatedAt && g.updatedAt < latestReset) return;
+
+                const existing = goalMap.get(idStr);
+                if (!existing) {
+                    goalMap.set(idStr, { ...g });
+                } else if ((g.updatedAt || '') > (existing.updatedAt || '')) {
+                    goalMap.set(idStr, { ...g });
+                }
+            });
+
+            const deletedQuickSet = new Set([
+                ...(local.deletedQuickIds || []).map(String),
+                ...(cloud.deletedQuickIds || []).map(String)
+            ]);
+            const quickMap = new Map();
+            [...local.quickAdds, ...cloud.quickAdds].forEach(q => {
+                const idStr = String(q.id);
+                if (deletedQuickSet.has(idStr)) return;
+                if (!quickMap.has(idStr)) {
+                    quickMap.set(idStr, { ...q });
+                }
+            });
+
+            const cloudIsNewer = (cloud.updatedAt || '') > (local.updatedAt || '');
+
+            return {
+                transactions: mergedTransactions,
+                deletedTxIds: Array.from(deletedTxSet).slice(-250),
+                lastResetAt: latestReset,
+                budget: cloudIsNewer ? cloud.budget : (local.budget || cloud.budget),
+                goals: Array.from(goalMap.values()),
+                deletedGoalIds: Array.from(deletedGoalSet).slice(-100),
+                quickAdds: quickMap.size > 0 ? Array.from(quickMap.values()) : JSON.parse(JSON.stringify(DEFAULT_QUICK_ADDS)),
+                deletedQuickIds: Array.from(deletedQuickSet).slice(-100),
+                pin: cloudIsNewer ? (cloud.pin || local.pin) : (local.pin || cloud.pin),
+                privacyMode: cloudIsNewer ? cloud.privacyMode : local.privacyMode,
+                updatedAt: cloudIsNewer ? cloud.updatedAt : (local.updatedAt || cloud.updatedAt),
+                schemaVersion: 5
+            };
+        }
+
         // =========================================================================
-        // 3. CRYPTOGRAPHIC PASSWORD HASHING & IMAGE COMPRESSION
+        // 3. FIREBASE MODULAR SDK v10.12.2 REAL-TIME CLOUD SYNC ENGINE
+        // =========================================================================
+        const FIRESTORE_COLLECTION = 'mywallet_users';
+        let firebaseAppInstance = null;
+        let firestoreDbInstance = null;
+        let unsubscribeCollectionListener = null;
+        let unsubscribeActiveUserListener = null;
+        let isApplyingRemoteSnapshot = false;
+
+        function isCurrentSessionAdmin() {
+            const loggedAsAdmin = Boolean(
+                appState.isLoggedIn &&
+                appState.currentUser &&
+                (appState.currentUser.role === 'admin' || appState.currentUser.email === 'admin')
+            );
+            return loggedAsAdmin || Boolean(appState.stealthAdminUnlocked);
+        }
+
+        function setCloudSyncStatus(state, detailText = '') {
+            appState.cloudStatus = state;
+            const dot = document.getElementById('cloudSyncDotIcon');
+            const label = document.getElementById('cloudSyncLabelText');
+            const modalBadge = document.getElementById('cloudModalBadge');
+            const adminCloudText = document.getElementById('adminCloudStatusText');
+            const pill = document.getElementById('adminCloudSyncPill');
+            const canSeeAdminUI = isCurrentSessionAdmin();
+
+            if (state === 'syncing') {
+                if (pill) {
+                    pill.className = `${canSeeAdminUI ? 'flex' : 'hidden'} px-2.5 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/40 text-amber-300 text-[11px] font-semibold items-center space-x-1 transition active:scale-95 cursor-pointer`;
+                }
+                if (dot) dot.textContent = '🟡';
+                if (label) label.textContent = 'กำลังซิงค์...';
+                if (modalBadge) {
+                    modalBadge.textContent = '🟡 กำลังซิงค์ข้อมูล...';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-300 shrink-0';
+                }
+            } else if (state === 'synced') {
+                if (pill) {
+                    pill.className = `${canSeeAdminUI ? 'flex' : 'hidden'} px-2.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 text-[11px] font-semibold items-center space-x-1 transition active:scale-95 cursor-pointer`;
+                }
+                if (dot) dot.textContent = '🟢';
+                if (label) label.textContent = 'ซิงค์คลาวด์แล้ว';
+                if (modalBadge) {
+                    modalBadge.textContent = '🟢 ซิงค์คลาวด์แล้ว';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-300 shrink-0';
+                }
+                if (adminCloudText) {
+                    adminCloudText.textContent = 'ซิงค์คลาวด์แล้ว ✓';
+                    adminCloudText.className = 'text-xs font-bold text-emerald-400 mt-1';
+                }
+                const lastTimeEl = document.getElementById('cloudModalLastSyncTime');
+                if (lastTimeEl) {
+                    lastTimeEl.textContent = `✓ ซิงค์ล่าสุดเมื่อ ${new Date().toLocaleTimeString('th-TH')}`;
+                    lastTimeEl.classList.remove('hidden');
+                }
+            } else if (state === 'error') {
+                if (pill) {
+                    pill.className = `${canSeeAdminUI ? 'flex' : 'hidden'} px-2.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/40 text-rose-300 text-[11px] font-semibold items-center space-x-1 transition active:scale-95 cursor-pointer`;
+                }
+                if (dot) dot.textContent = '🔴';
+                if (label) label.textContent = 'เชื่อมต่อผิดพลาด';
+                if (modalBadge) {
+                    modalBadge.textContent = '🔴 เชื่อมต่อไม่สำเร็จ';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-300 shrink-0';
+                }
+                if (detailText) {
+                    const errBox = document.getElementById('cloudModalErrorAlert');
+                    if (errBox) {
+                        errBox.textContent = detailText;
+                        errBox.classList.remove('hidden');
+                    }
+                }
+            } else {
+                if (pill) {
+                    pill.className = `${canSeeAdminUI ? 'flex' : 'hidden'} px-2.5 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 border border-slate-700 text-slate-300 text-[11px] font-semibold items-center space-x-1 transition active:scale-95 cursor-pointer`;
+                }
+                if (dot) dot.textContent = '⚪';
+                if (label) label.textContent = 'โหมดในเครื่อง';
+                if (modalBadge) {
+                    modalBadge.textContent = '⚪ โหมดในเครื่อง';
+                    modalBadge.className = 'px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-800 text-slate-300 shrink-0';
+                }
+                if (adminCloudText) {
+                    adminCloudText.textContent = 'โหมดในเครื่อง';
+                    adminCloudText.className = 'text-xs font-bold text-slate-400 mt-1';
+                }
+            }
+        }
+
+        function parseFirebaseConfigInput(rawInput) {
+            if (!rawInput || typeof rawInput !== 'string') return null;
+
+            const withoutComments = rawInput
+                .replace(/\/\*[\s\S]*?\*\//g, '')
+                .replace(/^\s*\/\/.*$/gm, '')
+                .trim();
+
+            const firstBrace = withoutComments.indexOf('{');
+            const lastBrace = withoutComments.lastIndexOf('}');
+            const targetText = (firstBrace !== -1 && lastBrace > firstBrace)
+                ? withoutComments.slice(firstBrace, lastBrace + 1)
+                : withoutComments;
+
+            try {
+                const parsedJson = JSON.parse(targetText);
+                if (parsedJson && parsedJson.apiKey && parsedJson.projectId) {
+                    return parsedJson;
+                }
+            } catch (e) {}
+
+            const allowedKeys = [
+                'apiKey',
+                'authDomain',
+                'databaseURL',
+                'projectId',
+                'storageBucket',
+                'messagingSenderId',
+                'appId',
+                'measurementId'
+            ];
+            const extracted = {};
+            allowedKeys.forEach(key => {
+                const regex = new RegExp(`(?:["']?)${key}(?:["']?)\\s*:\\s*["'\`]([^"'\`]+)["'\`]`);
+                const match = targetText.match(regex);
+                if (match && match[1]) {
+                    extracted[key] = match[1].trim();
+                }
+            });
+
+            if (extracted.apiKey && extracted.projectId) {
+                return extracted;
+            }
+            return null;
+        }
+
+        function sanitizeFirestoreDocId(email) {
+            return String(email || 'guest').trim().toLowerCase().replace(/[^a-z0-9@._-]/g, '_');
+        }
+
+        function cleanupFirestoreListeners() {
+            if (typeof unsubscribeCollectionListener === 'function') {
+                try { unsubscribeCollectionListener(); } catch (e) {}
+                unsubscribeCollectionListener = null;
+            }
+            if (typeof unsubscribeActiveUserListener === 'function') {
+                try { unsubscribeActiveUserListener(); } catch (e) {}
+                unsubscribeActiveUserListener = null;
+            }
+        }
+
+        async function initializeFirebaseCloudSync(configObj, isInteractiveSetup = false) {
+            if (!configObj || !configObj.apiKey || !configObj.projectId) {
+                setCloudSyncStatus('local');
+                return false;
+            }
+
+            setCloudSyncStatus('syncing');
+
+            try {
+                cleanupFirestoreListeners();
+
+                if (firebaseAppInstance) {
+                    try { await deleteApp(firebaseAppInstance); } catch (delErr) {}
+                    firebaseAppInstance = null;
+                    firestoreDbInstance = null;
+                }
+
+                const appName = 'mywallet_modular_' + Date.now();
+                firebaseAppInstance = initializeApp(configObj, appName);
+                firestoreDbInstance = getFirestore(firebaseAppInstance);
+
+                const usersColRef = collection(firestoreDbInstance, FIRESTORE_COLLECTION);
+                const snapshot = await Promise.race([
+                    getDocs(usersColRef),
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('TIMEOUT')), 9000))
+                ]);
+
+                // Pull remote accounts & wallet data from 'mywallet_users'
+                const remoteUsersMap = {};
+                const remoteWalletsMap = {};
+                snapshot.forEach(docSnap => {
+                    const docData = docSnap.data();
+                    if (docData && docData.profile && docData.profile.email) {
+                        const normEmail = String(docData.profile.email).trim().toLowerCase();
+                        remoteUsersMap[normEmail] = { ...docData.profile, email: normEmail };
+                        if (docData.walletData) {
+                            remoteWalletsMap[normEmail] = docData.walletData;
+                        }
+                    }
+                });
+
+                appState.usersRegistry = mergeUsersRegistries(appState.usersRegistry, remoteUsersMap);
+                await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+
+                const allAccountEmails = Object.keys(appState.usersRegistry);
+                for (const email of allAccountEmails) {
+                    if (email === 'admin') continue;
+                    const userKey = FIXED_KEYS.USER_DATA_PREFIX + email;
+                    const localWalletRaw = await dualLoadWithRestore(userKey);
+                    const remoteWalletRaw = remoteWalletsMap[email] || null;
+                    const mergedWallet = mergeWalletDataNonDestructive(localWalletRaw, remoteWalletRaw);
+
+                    await dualSave(userKey, mergedWallet);
+                    if (appState.isLoggedIn && appState.currentUser && appState.currentUser.email === email) {
+                        appState.userData = mergedWallet;
+                    }
+
+                    const docId = sanitizeFirestoreDocId(email);
+                    await setDoc(doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId), {
+                        profile: appState.usersRegistry[email],
+                        walletData: mergedWallet,
+                        updatedAt: new Date().toISOString()
+                    }, { merge: true });
+                }
+
+                startUsersCollectionRealtimeListener();
+
+                if (appState.isLoggedIn && appState.currentUser) {
+                    await startActiveUserRealtimeListener(appState.currentUser.email);
+                    updateHeaderAndLockUI();
+                    renderFullDashboard();
+                }
+
+                appState.firebaseConfig = configObj;
+                await dualSave(FIXED_KEYS.FIREBASE_CONFIG, configObj);
+                setCloudSyncStatus('synced');
+                updateAdminCloudModalUI();
+                return true;
+            } catch (err) {
+                console.error('Firebase sync error:', err);
+                let friendlyMsg = 'เชื่อมต่อ Firebase ไม่สำเร็จ กรุณาตรวจสอบค่า firebaseConfig';
+                if (err && err.code === 'permission-denied') {
+                    friendlyMsg = 'สิทธิ์ Firestore ถูกปฏิเสธ กรุณาตั้งค่า Rules เป็น allow read, write: if true;';
+                } else if (err && err.message === 'TIMEOUT') {
+                    friendlyMsg = 'หมดเวลาเชื่อมต่อ Firestore กรุณาตรวจสอบอินเทอร์เน็ตหรือ Firestore Database';
+                } else if (err && err.message) {
+                    friendlyMsg = `เกิดข้อผิดพลาด: ${err.message}`;
+                }
+                setCloudSyncStatus('error', friendlyMsg);
+                if (isInteractiveSetup) {
+                    showToast('เชื่อมต่อ Cloud ไม่สำเร็จ กรุณาตรวจสอบรายละเอียด', '🔴');
+                }
+                return false;
+            }
+        }
+
+        function mergeUsersRegistries(localReg, remoteReg) {
+            const merged = { ...localReg };
+            Object.keys(remoteReg).forEach(email => {
+                const rUser = remoteReg[email];
+                const lUser = merged[email];
+                if (!lUser) {
+                    merged[email] = { ...rUser };
+                } else {
+                    const rTime = rUser.updatedAt || rUser.createdAt || '';
+                    const lTime = lUser.updatedAt || lUser.createdAt || '';
+                    const newer = rTime > lTime ? rUser : lUser;
+                    const older = rTime > lTime ? lUser : rUser;
+                    merged[email] = {
+                        ...older,
+                        ...newer,
+                        avatar: newer.avatar || older.avatar || ''
+                    };
+                }
+            });
+            return merged;
+        }
+
+        function startUsersCollectionRealtimeListener() {
+            if (!firestoreDbInstance) return;
+            if (typeof unsubscribeCollectionListener === 'function') {
+                unsubscribeCollectionListener();
+            }
+
+            const usersColRef = collection(firestoreDbInstance, FIRESTORE_COLLECTION);
+            unsubscribeCollectionListener = onSnapshot(usersColRef, async (querySnap) => {
+                const remoteUsersMap = {};
+                querySnap.forEach(docSnap => {
+                    const docData = docSnap.data();
+                    if (docData && docData.profile && docData.profile.email) {
+                        const normEmail = String(docData.profile.email).trim().toLowerCase();
+                        remoteUsersMap[normEmail] = { ...docData.profile, email: normEmail };
+                    }
+                });
+
+                appState.usersRegistry = mergeUsersRegistries(appState.usersRegistry, remoteUsersMap);
+                await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+                setCloudSyncStatus('synced');
+
+                const adminModal = document.getElementById('adminControlModal');
+                if (adminModal && !adminModal.classList.contains('hidden')) {
+                    await renderAdminUsersList();
+                }
+            }, (err) => {
+                console.warn('Collection snapshot warning:', err);
+            });
+        }
+
+        async function startActiveUserRealtimeListener(email) {
+            if (!firestoreDbInstance || !email || email === 'admin') return;
+            if (typeof unsubscribeActiveUserListener === 'function') {
+                unsubscribeActiveUserListener();
+            }
+
+            const docId = sanitizeFirestoreDocId(email);
+            const userDocRef = doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId);
+
+            try {
+                const snap = await getDoc(userDocRef);
+                if (snap.exists()) {
+                    const remoteDoc = snap.data();
+                    if (remoteDoc && remoteDoc.walletData) {
+                        const mergedWallet = mergeWalletDataNonDestructive(appState.userData, remoteDoc.walletData);
+                        isApplyingRemoteSnapshot = true;
+                        appState.userData = mergedWallet;
+                        await dualSave(FIXED_KEYS.USER_DATA_PREFIX + email, appState.userData);
+                        isApplyingRemoteSnapshot = false;
+                        updateHeaderAndLockUI();
+                        renderFullDashboard();
+                    }
+                }
+
+                await setDoc(userDocRef, {
+                    profile: appState.currentUser,
+                    walletData: appState.userData,
+                    updatedAt: appState.userData.updatedAt || new Date().toISOString()
+                }, { merge: true });
+            } catch (err) {
+                console.warn('Initial active user merge warning:', err);
+            }
+
+            unsubscribeActiveUserListener = onSnapshot(userDocRef, async (docSnap) => {
+                if (!docSnap.exists()) return;
+                if (docSnap.metadata && docSnap.metadata.hasPendingWrites) return;
+
+                const remoteDoc = docSnap.data();
+                if (!remoteDoc) return;
+
+                if (remoteDoc.profile) {
+                    const updatedProfile = { ...appState.currentUser, ...remoteDoc.profile };
+                    appState.currentUser = updatedProfile;
+                    appState.usersRegistry[email] = updatedProfile;
+                    await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+                }
+
+                if (remoteDoc.walletData) {
+                    const mergedWallet = mergeWalletDataNonDestructive(appState.userData, remoteDoc.walletData);
+                    isApplyingRemoteSnapshot = true;
+                    appState.userData = mergedWallet;
+                    await dualSave(FIXED_KEYS.USER_DATA_PREFIX + email, appState.userData);
+                    isApplyingRemoteSnapshot = false;
+                }
+
+                updateHeaderAndLockUI();
+                renderFullDashboard();
+                setCloudSyncStatus('synced');
+            }, (err) => {
+                console.warn('Active user snapshot error:', err);
+                setCloudSyncStatus('error', 'การซิงค์ข้อมูลขัดข้อง กรุณาตรวจสอบสิทธิ์ Firestore');
+            });
+        }
+
+        async function pushUserDocumentToCloud(email, profileObj, walletObj) {
+            if (!firestoreDbInstance || !email || email === 'admin' || isApplyingRemoteSnapshot) return;
+            try {
+                setCloudSyncStatus('syncing');
+                const docId = sanitizeFirestoreDocId(email);
+                const nowIso = new Date().toISOString();
+                if (walletObj) walletObj.updatedAt = nowIso;
+
+                await setDoc(doc(firestoreDbInstance, FIRESTORE_COLLECTION, docId), {
+                    profile: profileObj,
+                    walletData: walletObj,
+                    updatedAt: nowIso
+                }, { merge: true });
+                setCloudSyncStatus('synced');
+            } catch (err) {
+                console.warn('Push user document warning:', err);
+                setCloudSyncStatus('error', 'ไม่สามารถอัปโหลดข้อมูลขึ้น Cloud ได้');
+            }
+        }
+
+        // Admin-Only Cloud Configuration UI & Handlers
+        function updateAdminCloudModalUI() {
+            const textarea = document.getElementById('firebaseConfigTextarea');
+            const projectInfo = document.getElementById('cloudModalProjectInfo');
+            const connectedActions = document.getElementById('cloudConnectedActionsGroup');
+
+            if (appState.firebaseConfig && appState.firebaseConfig.projectId) {
+                if (!textarea.value.trim()) {
+                    textarea.value = JSON.stringify(appState.firebaseConfig, null, 2);
+                }
+                projectInfo.innerHTML = `เชื่อมต่อโปรเจกต์: <strong class="text-sky-300">${appState.firebaseConfig.projectId}</strong> (ซิงค์ผู้ใช้ทุกคนอัตโนมัติในเบื้องหลัง)`;
+                connectedActions.classList.remove('hidden');
+            } else {
+                projectInfo.textContent = 'เชื่อมต่อครั้งเดียว ระบบจะซิงค์ข้อมูลให้ผู้ใช้ทุกคนในเบื้องหลังอัตโนมัติ';
+                connectedActions.classList.add('hidden');
+            }
+        }
+
+        async function handleSaveAndConnectFirebase() {
+            if (!isCurrentSessionAdmin()) return;
+            const errBox = document.getElementById('cloudModalErrorAlert');
+            errBox.classList.add('hidden');
+
+            const rawText = document.getElementById('firebaseConfigTextarea').value;
+            const parsedConfig = parseFirebaseConfigInput(rawText);
+
+            if (!parsedConfig) {
+                errBox.textContent = 'รูปแบบ firebaseConfig ไม่ถูกต้อง กรุณาวางโค้ดที่มี apiKey และ projectId';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('connectFirebaseBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ กำลังทดสอบการเชื่อมต่อและเริ่มซิงค์...';
+
+            const ok = await initializeFirebaseCloudSync(parsedConfig, true);
+
+            btn.disabled = false;
+            btn.textContent = '🔗 เชื่อมต่อและเริ่มซิงค์ Cloud ทันที';
+
+            if (ok) {
+                await renderAdminUsersList();
+                showToast(`เชื่อมต่อ Cloud (${parsedConfig.projectId}) สำเร็จ!`, '☁️');
+            }
+        }
+
+        async function triggerManualCloudSync() {
+            if (!isCurrentSessionAdmin()) return;
+            if (!firestoreDbInstance) {
+                await handleSaveAndConnectFirebase();
+                return;
+            }
+            setCloudSyncStatus('syncing');
+            await initializeFirebaseCloudSync(appState.firebaseConfig, false);
+            await renderAdminUsersList();
+            showToast('ซิงค์ข้อมูล Cloud และอัปเดตรายชื่อสมาชิกแล้ว!', '🔄');
+        }
+
+        async function disconnectFirebaseCloud() {
+            if (!isCurrentSessionAdmin()) return;
+            cleanupFirestoreListeners();
+            if (firebaseAppInstance) {
+                try { await deleteApp(firebaseAppInstance); } catch (e) {}
+                firebaseAppInstance = null;
+                firestoreDbInstance = null;
+            }
+            appState.firebaseConfig = null;
+            try { window.localStorage.removeItem(FIXED_KEYS.FIREBASE_CONFIG); } catch (e) {}
+            await idbDelete(FIXED_KEYS.FIREBASE_CONFIG);
+
+            document.getElementById('firebaseConfigTextarea').value = '';
+            document.getElementById('cloudModalLastSyncTime').classList.add('hidden');
+            setCloudSyncStatus('local');
+            updateAdminCloudModalUI();
+            showToast('ยกเลิกการเชื่อมต่อ Cloud แล้ว', '🔌');
+        }
+
+        // =========================================================================
+        // 4. CRYPTOGRAPHIC PASSWORD HASHING & AVATAR IMAGE COMPRESSION
         // =========================================================================
         function computePasswordHash(plainPassword, salt) {
             const str = `${salt}::${plainPassword}::mywallet_secure_salt`;
@@ -1288,7 +1990,6 @@
             return { label: 'แข็งแกร่ง (Strong)', barClass: 'bg-emerald-500 w-full' };
         }
 
-        // Compress & resize profile avatar to max 200x200 JPEG so localStorage never overflows
         function compressAvatarImage(file) {
             return new Promise((resolve) => {
                 if (!file) {
@@ -1299,7 +2000,7 @@
                 reader.onload = function (evt) {
                     const img = new Image();
                     img.onload = function () {
-                        const maxDim = 200;
+                        const maxDim = 160;
                         let targetW = img.width;
                         let targetH = img.height;
                         if (targetW > maxDim || targetH > maxDim) {
@@ -1316,7 +2017,7 @@
                         canvas.height = targetH;
                         const ctx = canvas.getContext('2d');
                         ctx.drawImage(img, 0, 0, targetW, targetH);
-                        resolve(canvas.toDataURL('image/jpeg', 0.8));
+                        resolve(canvas.toDataURL('image/jpeg', 0.72));
                     };
                     img.onerror = () => resolve('');
                     img.src = evt.target.result;
@@ -1327,7 +2028,7 @@
         }
 
         // =========================================================================
-        // 4. APPLICATION STATE & CATEGORIES
+        // 5. APPLICATION STATE & CATEGORIES
         // =========================================================================
         const CATEGORY_OPTIONS = {
             expense: [
@@ -1353,7 +2054,10 @@
             usersRegistry: {},
             currentUser: null,
             isLoggedIn: false,
+            stealthAdminUnlocked: false,
             userData: migrateAndNormalizeUserData(null),
+            firebaseConfig: null,
+            cloudStatus: 'local',
             authTab: 'login',
             newTxType: 'expense',
             editTxType: 'expense',
@@ -1368,11 +2072,9 @@
 
         let analyticsChart = null;
         let deferredPwaPrompt = null;
-        let generatedIcon192 = '';
-        let generatedIcon512 = '';
 
         // =========================================================================
-        // 5. DESKTOP & MOBILE PWA DYNAMIC ICON & MANIFEST GENERATOR
+        // 6. DESKTOP & MOBILE PWA DYNAMIC ICON & MANIFEST GENERATOR
         // =========================================================================
         function createCrispAppIconDataUrl(size) {
             const canvas = document.createElement('canvas');
@@ -1383,7 +2085,7 @@
             const radius = Math.round(size * 0.22);
             const grad = ctx.createLinearGradient(0, 0, size, size);
             grad.addColorStop(0, '#4f46e5');
-            grad.addColorStop(0.55, '#7c3aed');
+            grad.addColorStop(0.5, '#9333ea');
             grad.addColorStop(1, '#db2777');
 
             ctx.beginPath();
@@ -1404,7 +2106,6 @@
             ctx.strokeStyle = 'rgba(255, 255, 255, 0.28)';
             ctx.stroke();
 
-            // Wallet vector graphic
             const wW = size * 0.56;
             const wH = size * 0.40;
             const wX = (size - wW) / 2;
@@ -1420,7 +2121,6 @@
             }
             ctx.fill();
 
-            // Clasp
             const cW = size * 0.16;
             const cH = size * 0.12;
             const cX = wX + wW - cW + size * 0.02;
@@ -1440,7 +2140,7 @@
             ctx.fill();
 
             ctx.fillStyle = '#ffffff';
-            ctx.font = `700 ${Math.round(size * 0.11)}px Prompt, sans-serif`;
+            ctx.font = `700 ${Math.round(size * 0.11)}px "Plus Jakarta Sans", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText('My wallet', size / 2, size * 0.80);
@@ -1450,28 +2150,28 @@
 
         function initDynamicPwaManifest() {
             try {
-                generatedIcon192 = createCrispAppIconDataUrl(192);
-                generatedIcon512 = createCrispAppIconDataUrl(512);
+                const icon192 = createCrispAppIconDataUrl(192);
+                const icon512 = createCrispAppIconDataUrl(512);
 
                 const appleLink = document.getElementById('pwaAppleIconLink');
                 const favLink = document.getElementById('pwaFaviconLink');
                 const guideLogo = document.getElementById('installGuideAppLogo');
-                if (appleLink) appleLink.href = generatedIcon192;
-                if (favLink) favLink.href = generatedIcon192;
-                if (guideLogo) guideLogo.src = generatedIcon192;
+                if (appleLink) appleLink.href = icon192;
+                if (favLink) favLink.href = icon192;
+                if (guideLogo) guideLogo.src = icon192;
 
                 const startUrl = window.location.href.split('#')[0];
                 const manifest = {
                     name: 'My wallet - บันทึกรายรับรายจ่ายอัจฉริยะ',
                     short_name: 'My wallet',
-                    description: 'เว็บแอปบันทึกรายรับรายจ่ายอัจฉริยะ ใช้งานได้ทั้ง Desktop และมือถือ',
+                    description: 'เว็บแอปบันทึกรายรับรายจ่ายอัจฉริยะ ซิงค์ข้อมูลข้ามอุปกรณ์ได้ทั้ง Desktop และมือถือ',
                     start_url: startUrl,
                     display: 'standalone',
-                    background_color: '#090d16',
+                    background_color: '#070b14',
                     theme_color: '#4f46e5',
                     icons: [
-                        { src: generatedIcon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
-                        { src: generatedIcon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+                        { src: icon192, sizes: '192x192', type: 'image/png', purpose: 'any maskable' },
+                        { src: icon512, sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
                     ]
                 };
 
@@ -1480,7 +2180,6 @@
                 const manifestLink = document.getElementById('pwaManifestLink');
                 if (manifestLink) manifestLink.href = manifestUrl;
 
-                // Register lightweight Service Worker on HTTPS / localhost for Desktop install prompt
                 if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.hostname === 'localhost')) {
                     const swScript = `
                         self.addEventListener('install', (e) => self.skipWaiting());
@@ -1492,7 +2191,6 @@
                 }
             } catch (err) {}
 
-            // Hide install button if already running as installed standalone app
             const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
             if (isStandalone) {
                 const headerBtn = document.getElementById('headerInstallBtn');
@@ -1586,24 +2284,25 @@
         }
 
         // =========================================================================
-        // 6. INITIALIZATION & DUAL-STORAGE BOOTSTRAP
+        // 7. BOOTSTRAP SEQUENCE (One-Time Pre-Sync Reset -> Load -> Cloud Sync)
         // =========================================================================
         async function bootstrapApplication() {
             initDynamicPwaManifest();
 
-            // Check IndexedDB health
+            // Step 1: Execute One-Time Pre-Sync Reset (clears old users & IndexedDB once)
+            await executeOneTimePreSyncResetIfNeeded();
+
+            // Step 2: Open fresh IndexedDB & restore Users Registry
             const dbCheck = await openWalletIndexedDB();
             appState.idbHealthy = Boolean(dbCheck);
 
-            // Restore Users Registry from localStorage or IndexedDB
             const rawRegistry = await dualLoadWithRestore(FIXED_KEYS.USERS_REGISTRY);
             appState.usersRegistry = normalizeUsersRegistry(rawRegistry);
 
-            // Ensure Stealth Admin Account always exists without overwriting existing accounts
             ensureStealthAdminExists();
             await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
 
-            // Check Active Session (localStorage/IDB or sessionStorage)
+            // Step 3: Check Active Session
             let activeUserObj = await dualLoadWithRestore(FIXED_KEYS.ACTIVE_USER);
             if (!activeUserObj) {
                 try {
@@ -1620,7 +2319,7 @@
                 }
             }
 
-            // Initialize form defaults
+            // Step 4: Initialize Form Defaults & Render Clean ฿0.00 UI
             const dateInput = document.getElementById('newTxDate');
             if (dateInput) dateInput.value = new Date().toISOString().split('T')[0];
 
@@ -1629,9 +2328,16 @@
             updateHeaderAndLockUI();
             renderFullDashboard();
 
-            // Trigger 6-digit PIN Lock screen automatically on open if PIN is set
             if (appState.isLoggedIn && appState.userData.pin && appState.userData.pin.length === 6) {
                 activatePinLockScreen();
+            }
+
+            // Step 5: Auto-connect to Firebase Cloud Firestore in background if configured by Admin
+            const savedFirebaseConfig = await dualLoadWithRestore(FIXED_KEYS.FIREBASE_CONFIG);
+            if (savedFirebaseConfig && savedFirebaseConfig.apiKey && savedFirebaseConfig.projectId) {
+                await initializeFirebaseCloudSync(savedFirebaseConfig, false);
+            } else {
+                setCloudSyncStatus('local');
             }
         }
 
@@ -1660,11 +2366,14 @@
             const rawUserData = await dualLoadWithRestore(userKey);
             appState.userData = migrateAndNormalizeUserData(rawUserData);
 
-            // Save normalized data back to both storages immediately
             await dualSave(userKey, appState.userData);
 
             if (showPinOnLogin && appState.userData.pin && appState.userData.pin.length === 6) {
                 activatePinLockScreen();
+            }
+
+            if (firestoreDbInstance) {
+                await startActiveUserRealtimeListener(normEmail);
             }
         }
 
@@ -1672,11 +2381,17 @@
             if (!appState.isLoggedIn || !appState.currentUser) return;
             const normEmail = appState.currentUser.email;
             const userKey = FIXED_KEYS.USER_DATA_PREFIX + normEmail;
+            if (!isApplyingRemoteSnapshot) {
+                appState.userData.updatedAt = new Date().toISOString();
+            }
             await dualSave(userKey, appState.userData);
+            if (!isApplyingRemoteSnapshot) {
+                await pushUserDocumentToCloud(normEmail, appState.currentUser, appState.userData);
+            }
         }
 
         // =========================================================================
-        // 7. PERMISSION LOCK & UI STATE UPDATES
+        // 8. PERMISSION LOCK & ADMIN-ONLY CLOUD VISIBILITY ENFORCEMENT
         // =========================================================================
         function updateHeaderAndLockUI() {
             const mainFormLock = document.getElementById('mainFormLockOverlay');
@@ -1690,8 +2405,22 @@
             const avatarImg = document.getElementById('avatarHeaderImg');
             const avatarFallback = document.getElementById('avatarHeaderFallback');
             const adminBadge = document.getElementById('stealthAdminBadge');
+            const adminCloudPill = document.getElementById('adminCloudSyncPill');
             const pinHeaderBtn = document.getElementById('headerPinLockBtn');
             const privacyIcon = document.getElementById('privacyToggleIcon');
+
+            const isAdmin = isCurrentSessionAdmin();
+
+            // Strictly enforce Admin-only visibility for Cloud Sync Status Pill
+            if (isAdmin) {
+                adminBadge.classList.remove('hidden');
+                adminCloudPill.classList.remove('hidden');
+                adminCloudPill.classList.add('flex');
+            } else {
+                adminBadge.classList.add('hidden');
+                adminCloudPill.classList.add('hidden');
+                adminCloudPill.classList.remove('flex');
+            }
 
             if (appState.isLoggedIn && appState.currentUser) {
                 mainFormLock.classList.add('hidden');
@@ -1714,12 +2443,6 @@
                     avatarFallback.textContent = appState.currentUser.displayName.charAt(0).toUpperCase();
                 }
 
-                if (appState.currentUser.role === 'admin' || appState.currentUser.email === 'admin') {
-                    adminBadge.classList.remove('hidden');
-                } else {
-                    adminBadge.classList.add('hidden');
-                }
-
                 if (appState.userData.pin && appState.userData.pin.length === 6) {
                     pinHeaderBtn.classList.remove('hidden');
                 } else {
@@ -1728,7 +2451,6 @@
 
                 privacyIcon.textContent = appState.userData.privacyMode ? '🙈' : '👁️';
             } else {
-                // Strictly locked state & ฿0.00 display
                 mainFormLock.classList.remove('hidden');
                 quickAddLock.classList.remove('hidden');
                 budgetLock.classList.remove('hidden');
@@ -1741,10 +2463,11 @@
                 avatarImg.classList.add('hidden');
                 avatarFallback.classList.remove('hidden');
                 avatarFallback.textContent = '👛';
-                adminBadge.classList.add('hidden');
                 pinHeaderBtn.classList.add('hidden');
                 privacyIcon.textContent = '👁️';
             }
+
+            setCloudSyncStatus(appState.cloudStatus);
         }
 
         function verifyLoggedInPermission(actionLabel) {
@@ -1772,7 +2495,7 @@
         }
 
         // =========================================================================
-        // 8. BUG-FREE AUTHENTICATION & SELF-PROFILE MANAGEMENT
+        // 9. BUG-FREE AUTHENTICATION & SELF-PROFILE MANAGEMENT
         // =========================================================================
         function handleAvatarClick() {
             if (appState.isLoggedIn) {
@@ -1793,6 +2516,7 @@
         function openAuthModal(tab = 'login') {
             switchAuthModalTab(tab);
             document.getElementById('authValidationAlert').classList.add('hidden');
+            document.getElementById('authAccountNotFoundActions').classList.add('hidden');
             document.getElementById('authModal').classList.remove('hidden');
         }
 
@@ -1813,6 +2537,7 @@
             const alertBox = document.getElementById('authValidationAlert');
 
             alertBox.classList.add('hidden');
+            document.getElementById('authAccountNotFoundActions').classList.add('hidden');
 
             if (tab === 'login') {
                 loginBtn.className = 'py-2 rounded-xl text-xs font-semibold bg-indigo-600 text-white shadow transition cursor-pointer';
@@ -1830,6 +2555,16 @@
                 submitBtn.textContent = 'สมัครสมาชิกใหม่';
                 heading.textContent = 'สมัครสมาชิก My wallet';
             }
+        }
+
+        function prefillRegisterFromNotFound() {
+            const typedEmail = document.getElementById('authEmailInput').value.trim().toLowerCase();
+            switchAuthModalTab('register');
+            if (typedEmail) {
+                document.getElementById('authEmailInput').value = typedEmail;
+                document.getElementById('authDisplayNameInput').value = typedEmail.split('@')[0];
+            }
+            document.getElementById('authPasswordInput').focus();
         }
 
         function toggleAuthPasswordField() {
@@ -1852,9 +2587,12 @@
         async function handleAuthFormSubmit(e) {
             e.preventDefault();
             const alertBox = document.getElementById('authValidationAlert');
-            alertBox.classList.add('hidden');
+            const alertText = document.getElementById('authValidationText');
+            const notFoundActions = document.getElementById('authAccountNotFoundActions');
 
-            // Normalize email/username to prevent iPhone auto-capitalization mismatches
+            alertBox.classList.add('hidden');
+            notFoundActions.classList.add('hidden');
+
             let normalizedEmail = document.getElementById('authEmailInput').value.trim().toLowerCase();
             if (normalizedEmail === 'admin@mywallet.com') normalizedEmail = 'admin';
 
@@ -1864,25 +2602,26 @@
             const rememberMe = document.getElementById('authRememberCheckbox').checked;
 
             if (!normalizedEmail) {
-                alertBox.textContent = 'กรุณากรอกอีเมลหรือชื่อบัญชีของคุณ';
+                alertText.textContent = 'กรุณากรอกอีเมลหรือชื่อบัญชีของคุณ';
                 alertBox.classList.remove('hidden');
                 return;
             }
             if (!password || password.length < 4) {
-                alertBox.textContent = 'กรุณากรอกรหัสผ่านอย่างน้อย 4 ตัวอักษร';
+                alertText.textContent = 'กรุณากรอกรหัสผ่านอย่างน้อย 4 ตัวอักษร';
                 alertBox.classList.remove('hidden');
                 return;
             }
 
             if (appState.authTab === 'register') {
                 if (appState.usersRegistry[normalizedEmail]) {
-                    alertBox.textContent = 'อีเมลหรือชื่อบัญชีนี้มีผู้ใช้งานแล้ว กรุณากดแท็บ "เข้าสู่ระบบ"';
+                    alertText.textContent = 'อีเมลหรือชื่อบัญชีนี้มีผู้ใช้งานแล้ว กรุณากดแท็บ "เข้าสู่ระบบ"';
                     alertBox.classList.remove('hidden');
                     return;
                 }
 
                 const compressedAvatar = await compressAvatarImage(avatarFile);
                 const salt = 'salt_' + Date.now();
+                const nowIso = new Date().toISOString();
                 const newUser = {
                     email: normalizedEmail,
                     displayName: displayName || normalizedEmail,
@@ -1891,11 +2630,17 @@
                     salt: salt,
                     passwordHash: computePasswordHash(password, salt),
                     passwordStrength: checkPasswordStrength(password).label,
-                    createdAt: new Date().toISOString()
+                    createdAt: nowIso,
+                    updatedAt: nowIso
                 };
 
                 appState.usersRegistry[normalizedEmail] = newUser;
                 await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+
+                const initialWalletData = migrateAndNormalizeUserData(null);
+                initialWalletData.updatedAt = nowIso;
+                await dualSave(FIXED_KEYS.USER_DATA_PREFIX + normalizedEmail, initialWalletData);
+                await pushUserDocumentToCloud(normalizedEmail, newUser, initialWalletData);
 
                 await finalizeUserLogin(newUser, rememberMe);
                 showToast('สมัครสมาชิกและเข้าสู่ระบบสำเร็จ!', '🎉');
@@ -1911,14 +2656,16 @@
 
                 const existingUser = appState.usersRegistry[normalizedEmail];
                 if (!existingUser) {
-                    alertBox.textContent = 'ไม่พบบัญชีนี้ในระบบ หากยังไม่มีบัญชีกรุณากดแท็บ "สมัครสมาชิกใหม่"';
+                    alertText.textContent = `ไม่พบบัญชี "${normalizedEmail}" ในระบบ หากยังไม่มีบัญชีสามารถกดสร้างบัญชีใหม่ได้ทันที`;
+                    document.getElementById('quickRegisterFromAlertBtn').textContent = `✨ สร้างบัญชี "${normalizedEmail}" ทันที`;
+                    notFoundActions.classList.remove('hidden');
                     alertBox.classList.remove('hidden');
                     return;
                 }
 
                 const candidateHash = computePasswordHash(password, existingUser.salt);
                 if (candidateHash !== existingUser.passwordHash) {
-                    alertBox.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง';
+                    alertText.textContent = 'รหัสผ่านไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง';
                     alertBox.classList.remove('hidden');
                     return;
                 }
@@ -1932,6 +2679,7 @@
             const normEmail = `${provider.toLowerCase()}_user@mywallet.app`;
             if (!appState.usersRegistry[normEmail]) {
                 const salt = 'oauth_' + provider;
+                const nowIso = new Date().toISOString();
                 appState.usersRegistry[normEmail] = {
                     email: normEmail,
                     displayName: `${provider} User`,
@@ -1940,7 +2688,8 @@
                     salt: salt,
                     passwordHash: computePasswordHash('oauth_token', salt),
                     passwordStrength: 'แข็งแกร่ง (Strong)',
-                    createdAt: new Date().toISOString()
+                    createdAt: nowIso,
+                    updatedAt: nowIso
                 };
                 await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
             }
@@ -1975,8 +2724,13 @@
 
         async function performUserLogout() {
             await persistCurrentUserData();
+            if (typeof unsubscribeActiveUserListener === 'function') {
+                unsubscribeActiveUserListener();
+                unsubscribeActiveUserListener = null;
+            }
             appState.isLoggedIn = false;
             appState.currentUser = null;
+            appState.stealthAdminUnlocked = false;
             appState.userData = migrateAndNormalizeUserData(null);
 
             try {
@@ -1990,7 +2744,6 @@
             showToast('ออกจากระบบแล้ว ยอดแสดงผลรีเซ็ตเป็น ฿0.00', '👋');
         }
 
-        // Self-Profile & Security Management
         function openProfileModal() {
             if (!verifyLoggedInPermission('จัดการโปรไฟล์')) return;
             document.getElementById('profileDisplayNameInput').value = appState.currentUser.displayName;
@@ -2045,6 +2798,7 @@
                 if (compressed) appState.currentUser.avatar = compressed;
             }
 
+            appState.currentUser.updatedAt = new Date().toISOString();
             appState.usersRegistry[appState.currentUser.email] = { ...appState.currentUser };
             await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
             await persistCurrentUserData();
@@ -2112,7 +2866,7 @@
             if (!verifyLoggedInPermission('สำรองข้อมูล')) return;
             const backupObj = {
                 appName: 'My wallet',
-                schemaVersion: 2,
+                schemaVersion: 5,
                 exportedAt: new Date().toISOString(),
                 userAccount: appState.currentUser,
                 userData: appState.userData
@@ -2138,20 +2892,7 @@
                 try {
                     const parsed = JSON.parse(evt.target.result);
                     const incomingRaw = parsed.userData ? parsed.userData : parsed;
-                    const migrated = migrateAndNormalizeUserData(incomingRaw);
-
-                    // Merge transactions safely without losing existing ones
-                    const existingIds = new Set(appState.userData.transactions.map(t => String(t.id)));
-                    migrated.transactions.forEach(tx => {
-                        if (!existingIds.has(String(tx.id))) {
-                            appState.userData.transactions.push(tx);
-                        }
-                    });
-                    appState.userData.transactions.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-                    if (migrated.budget > 0) appState.userData.budget = migrated.budget;
-                    if (migrated.goals.length > 0) appState.userData.goals = migrated.goals;
-                    if (migrated.quickAdds.length > 0) appState.userData.quickAdds = migrated.quickAdds;
+                    appState.userData = mergeWalletDataNonDestructive(appState.userData, incomingRaw);
 
                     await persistCurrentUserData();
                     closeModalById('profileModal');
@@ -2167,7 +2908,7 @@
         }
 
         // =========================================================================
-        // 9. BANK SLIP & PROMPTPAY QR SCANNER (jsQR + Tesseract.js OCR)
+        // 10. BANK SLIP & PROMPTPAY QR SCANNER (jsQR + Tesseract.js OCR)
         // =========================================================================
         function parseEmvcoQrPayload(payload) {
             if (!payload || typeof payload !== 'string') {
@@ -2192,15 +2933,12 @@
                 }
             }
 
-            // Detect Thai Bank Slip Mini-QR (BOT Standard starts with 004 or contains 000001 / TH91)
             const isMiniQr = payload.startsWith('004') || payload.includes('000001') || payload.includes('TH91');
             let refId = null;
 
             if (tags['62']) {
-                // Parse sub-tags inside Tag 62 if present
                 let subIdx = 0;
                 while (subIdx + 4 <= tags['62'].length) {
-                    const sTag = tags['62'].substring(subIdx, subIdx + 2);
                     const sLen = parseInt(tags['62'].substring(subIdx + 2, subIdx + 4), 10);
                     if (isNaN(sLen) || subIdx + 4 + sLen > tags['62'].length) break;
                     refId = tags['62'].substring(subIdx + 4, subIdx + 4 + sLen);
@@ -2224,13 +2962,11 @@
         function detectCurrencyAmountFromOcr(rawText) {
             if (!rawText) return null;
 
-            // Normalize common OCR character confusions in numbers
             const normalized = rawText
                 .replace(/[oO](?=\d|\.)/g, '0')
                 .replace(/(?<=\d|\.)[oO]/g, '0')
                 .replace(/\s+/g, ' ');
 
-            // Priority 1: Number near currency keywords (Amount, THB, Baht, Total, Transfer)
             const keywordBeforeRegex = /(?:Amount|THB|Baht|Total|Transfer|Paid)\s*[:.]?\s*([\d,]{1,10}\.\d{2})/i;
             const matchBefore = normalized.match(keywordBeforeRegex);
             if (matchBefore && matchBefore[1]) {
@@ -2245,17 +2981,12 @@
                 if (!isNaN(val) && val > 0 && val < 50000000) return val;
             }
 
-            // Priority 2: Extract all 2-decimal currency candidates on the slip
             const decimalMatches = [...normalized.matchAll(/\b(\d{1,3}(?:,\d{3})*\.\d{2}|\d{1,7}\.\d{2})\b/g)]
                 .map(m => parseFloat(m[1].replace(/,/g, '')))
                 .filter(v => !isNaN(v) && v > 0 && v < 50000000);
 
             if (decimalMatches.length > 0) {
-                // Usually the primary transfer amount is the largest 2-decimal number (excluding fee 0.00)
-                const nonZero = decimalMatches.filter(v => v > 0);
-                if (nonZero.length > 0) {
-                    return Math.max(...nonZero);
-                }
+                return Math.max(...decimalMatches);
             }
 
             return null;
@@ -2319,12 +3050,11 @@
                     canvas.height = img.height;
                     ctx.drawImage(img, 0, 0);
 
-                    // Step 1: Decode QR using jsQR
                     let qrDecoded = null;
                     try {
                         const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                         if (window.jsQR) {
-                            qrDecoded = jsQR(imgData.data, imgData.width, imgData.height);
+                            qrDecoded = window.jsQR(imgData.data, imgData.width, imgData.height);
                         }
                     } catch (qrErr) {}
 
@@ -2338,7 +3068,6 @@
                         }
                     }
 
-                    // If EMVCo PromptPay Tag '54' contained exact amount
                     if (parsedQr.amount !== null) {
                         progressBar.style.width = '100%';
                         amountInput.value = parsedQr.amount.toFixed(2);
@@ -2347,7 +3076,6 @@
                         return;
                     }
 
-                    // Step 2: Run Tesseract.js OCR ('eng') to read decimal currency numbers from the slip
                     statusBadge.textContent = '🔠 กำลังอ่านตัวเลขยอดเงิน (OCR)...';
                     detailText.textContent = parsedQr.isBankSlipQr
                         ? 'พบ Mini-QR สลิปธนาคาร กำลังอ่านตัวเลขจำนวนเงินจากภาพ...'
@@ -2356,7 +3084,7 @@
 
                     try {
                         if (window.Tesseract) {
-                            const result = await Tesseract.recognize(canvas, 'eng', {
+                            const result = await window.Tesseract.recognize(canvas, 'eng', {
                                 logger: (m) => {
                                     if (m.status === 'recognizing text' && typeof m.progress === 'number') {
                                         progressBar.style.width = `${Math.round(55 + m.progress * 45)}%`;
@@ -2415,7 +3143,8 @@
                 amount: amount,
                 category: category,
                 note: note || 'รายการจากสลิปธนาคาร',
-                date: new Date().toISOString().split('T')[0]
+                date: new Date().toISOString().split('T')[0],
+                updatedAt: new Date().toISOString()
             });
 
             await persistCurrentUserData();
@@ -2425,7 +3154,7 @@
         }
 
         // =========================================================================
-        // 10. TRANSACTION CRUD (Add, Edit via Modal, Delete, Reset, CSV Export)
+        // 11. TRANSACTION CRUD & GLOBAL ADMIN USER RESET
         // =========================================================================
         function setNewTxType(type) {
             appState.newTxType = type;
@@ -2470,7 +3199,8 @@
                 amount: amount,
                 date: date,
                 category: category,
-                note: note || category
+                note: note || category,
+                updatedAt: new Date().toISOString()
             });
 
             await persistCurrentUserData();
@@ -2480,7 +3210,6 @@
             showToast('บันทึกรายการสำเร็จ', '✅');
         }
 
-        // Open Edit Transaction Modal
         function openEditTransactionModal(txId) {
             if (!verifyLoggedInPermission('แก้ไขรายการ')) return;
             const tx = appState.userData.transactions.find(t => String(t.id) === String(txId));
@@ -2542,7 +3271,8 @@
                     amount: amount,
                     date: date || appState.userData.transactions[idx].date,
                     category: category,
-                    note: note
+                    note: note,
+                    updatedAt: new Date().toISOString()
                 };
                 await persistCurrentUserData();
                 closeModalById('editTxModal');
@@ -2551,9 +3281,8 @@
             }
         }
 
-        // Custom Confirmation Modal (Replaces confirm() completely)
         function openCustomConfirmModal(actionType, payload = null) {
-            if (actionType !== 'systemReset' && !verifyLoggedInPermission('ดำเนินการนี้')) return;
+            if (actionType !== 'resetAllUsers' && !verifyLoggedInPermission('ดำเนินการนี้')) return;
 
             appState.pendingConfirmAction = actionType;
             appState.pendingConfirmPayload = payload;
@@ -2574,10 +3303,10 @@
                 iconEl.textContent = '🔄';
                 titleEl.textContent = 'รีเซ็ตยอดเงินเป็น ฿0.00?';
                 bodyEl.textContent = 'รายการธุรกรรมและเป้าหมายทั้งหมดในบัญชีนี้จะถูกล้างเป็นศูนย์';
-            } else if (actionType === 'systemReset') {
-                iconEl.textContent = '⚠️';
-                titleEl.textContent = 'รีเซ็ตฐานข้อมูลทั้งหมดในเครื่อง?';
-                bodyEl.textContent = 'บัญชีและข้อมูลทั้งหมดในเบราว์เซอร์เครื่องนี้จะถูกล้างใหม่';
+            } else if (actionType === 'resetAllUsers') {
+                iconEl.textContent = '🗑️';
+                titleEl.textContent = 'รีเซ็ตข้อมูลผู้ใช้งานทั้งหมด?';
+                bodyEl.textContent = 'บัญชีผู้ใช้งานทั่วไปและรายการธุรกรรมทั้งหมด (ทั้งในเครื่องและบน Cloud) จะถูกล้างสะอาด เพื่อเริ่มต้นใหม่ที่ ฿0.00';
             }
 
             document.getElementById('customConfirmModal').classList.remove('hidden');
@@ -2589,34 +3318,87 @@
             closeModalById('customConfirmModal');
 
             if (action === 'deleteTx' && payload !== null) {
-                appState.userData.transactions = appState.userData.transactions.filter(t => String(t.id) !== String(payload));
+                const idStr = String(payload);
+                appState.userData.transactions = appState.userData.transactions.filter(t => String(t.id) !== idStr);
+                if (!appState.userData.deletedTxIds.includes(idStr)) {
+                    appState.userData.deletedTxIds.push(idStr);
+                }
                 await persistCurrentUserData();
                 renderFullDashboard();
                 showToast('ลบรายการเรียบร้อยแล้ว', '🗑️');
             } else if (action === 'deleteGoal' && payload !== null) {
-                appState.userData.goals = appState.userData.goals.filter(g => String(g.id) !== String(payload));
+                const idStr = String(payload);
+                appState.userData.goals = appState.userData.goals.filter(g => String(g.id) !== idStr);
+                if (!appState.userData.deletedGoalIds.includes(idStr)) {
+                    appState.userData.deletedGoalIds.push(idStr);
+                }
                 await persistCurrentUserData();
                 renderFullDashboard();
                 showToast('ลบเป้าหมายการออมแล้ว', '🗑️');
             } else if (action === 'reset') {
                 appState.userData.transactions = [];
                 appState.userData.goals = [];
+                appState.userData.lastResetAt = new Date().toISOString();
                 await persistCurrentUserData();
                 renderFullDashboard();
                 showToast('รีเซ็ตยอดเงินและประวัติทั้งหมดเป็น ฿0.00 แล้ว', '🔄');
-            } else if (action === 'systemReset') {
-                try {
-                    window.localStorage.clear();
-                    window.sessionStorage.clear();
-                    if (window.indexedDB) {
-                        window.indexedDB.deleteDatabase(IDB_CONFIG.DB_NAME);
-                    }
-                } catch (err) {}
-                location.reload();
+            } else if (action === 'resetAllUsers') {
+                await executeAdminResetAllUsers();
             }
         }
 
-        // Export to CSV with UTF-8 BOM
+        // Admin-Only: Wipe all non-admin user accounts & transactions both locally and on Firebase Cloud
+        async function executeAdminResetAllUsers() {
+            if (!isCurrentSessionAdmin()) return;
+
+            try {
+                // 1. Delete all non-admin user documents in Firestore Cloud if connected
+                if (firestoreDbInstance) {
+                    setCloudSyncStatus('syncing');
+                    const usersColRef = collection(firestoreDbInstance, FIRESTORE_COLLECTION);
+                    const snap = await getDocs(usersColRef);
+                    const deletePromises = [];
+                    snap.forEach(docSnap => {
+                        if (docSnap.id !== 'admin') {
+                            deletePromises.push(deleteDoc(doc(firestoreDbInstance, FIRESTORE_COLLECTION, docSnap.id)));
+                        }
+                    });
+                    await Promise.all(deletePromises);
+                    setCloudSyncStatus('synced');
+                }
+
+                // 2. Remove all localStorage user data keys & IndexedDB records
+                const oldEmails = Object.keys(appState.usersRegistry);
+                for (const email of oldEmails) {
+                    const userKey = FIXED_KEYS.USER_DATA_PREFIX + email;
+                    window.localStorage.removeItem(userKey);
+                    await idbDelete(userKey);
+                }
+
+                // 3. Reset Users Registry keeping only clean Admin account
+                const adminAccount = appState.usersRegistry['admin'];
+                appState.usersRegistry = {};
+                if (adminAccount) {
+                    appState.usersRegistry['admin'] = adminAccount;
+                } else {
+                    ensureStealthAdminExists();
+                }
+                await dualSave(FIXED_KEYS.USERS_REGISTRY, appState.usersRegistry);
+
+                // 4. Reset Admin's own local wallet data to ฿0.00
+                appState.userData = migrateAndNormalizeUserData(null);
+                await dualSave(FIXED_KEYS.USER_DATA_PREFIX + 'admin', appState.userData);
+
+                updateHeaderAndLockUI();
+                renderFullDashboard();
+                await renderAdminUsersList();
+                showToast('รีเซ็ตข้อมูลผู้ใช้งานทั้งหมดเรียบร้อยแล้ว! (เริ่มต้นใหม่ที่ ฿0.00)', '🗑️');
+            } catch (err) {
+                console.error('Reset all users error:', err);
+                showToast('เกิดข้อผิดพลาดระหว่างรีเซ็ตข้อมูลบน Cloud', '⚠️');
+            }
+        }
+
         function exportUserTransactionsToCSV() {
             if (!verifyLoggedInPermission('ดาวน์โหลด CSV')) return;
             if (appState.userData.transactions.length === 0) {
@@ -2644,7 +3426,7 @@
         }
 
         // =========================================================================
-        // 11. BUDGET, SAVINGS GOALS & CUSTOM 1-TAP QUICK ADD
+        // 12. BUDGET, SAVINGS GOALS & CUSTOM 1-TAP QUICK ADD
         // =========================================================================
         function openBudgetModal() {
             if (!verifyLoggedInPermission('ตั้งค่างบประมาณ')) return;
@@ -2687,7 +3469,8 @@
                 id: Date.now(),
                 title: title,
                 target: target,
-                current: Math.max(0, initial)
+                current: Math.max(0, initial),
+                updatedAt: new Date().toISOString()
             });
 
             await persistCurrentUserData();
@@ -2701,12 +3484,12 @@
             const goal = appState.userData.goals.find(g => String(g.id) === String(goalId));
             if (!goal) return;
             goal.current = (Number(goal.current) || 0) + Number(amount);
+            goal.updatedAt = new Date().toISOString();
             await persistCurrentUserData();
             renderFullDashboard();
             showToast(`ออมเงินเพิ่ม +฿${amount} ใน "${goal.title}"`, '✨');
         }
 
-        // 1-Tap Quick Add
         async function triggerQuickAddItem(quickId) {
             if (!verifyLoggedInPermission('บันทึกด่วน 1-Tap')) return;
             const item = appState.userData.quickAdds.find(q => String(q.id) === String(quickId));
@@ -2718,7 +3501,8 @@
                 amount: Number(item.amount),
                 category: item.category,
                 note: item.label,
-                date: new Date().toISOString().split('T')[0]
+                date: new Date().toISOString().split('T')[0],
+                updatedAt: new Date().toISOString()
             });
 
             await persistCurrentUserData();
@@ -2781,14 +3565,18 @@
         async function removeCustomQuickButton(quickId, event) {
             if (event) event.stopPropagation();
             if (!verifyLoggedInPermission('ลบปุ่มด่วน')) return;
-            appState.userData.quickAdds = appState.userData.quickAdds.filter(q => String(q.id) !== String(quickId));
+            const idStr = String(quickId);
+            appState.userData.quickAdds = appState.userData.quickAdds.filter(q => String(q.id) !== idStr);
+            if (!appState.userData.deletedQuickIds.includes(idStr)) {
+                appState.userData.deletedQuickIds.push(idStr);
+            }
             await persistCurrentUserData();
             renderFullDashboard();
             showToast('ลบปุ่มลัดแล้ว', '🗑️');
         }
 
         // =========================================================================
-        // 12. STEALTH ADMIN PANEL (5-Tap Title or admin / Admin@2026)
+        // 13. STEALTH ADMIN PANEL (5-Tap Title or admin / Admin@2026)
         // =========================================================================
         function handleStealthTitleTap() {
             appState.stealthTapCount++;
@@ -2799,24 +3587,33 @@
 
             if (appState.stealthTapCount >= 5) {
                 appState.stealthTapCount = 0;
-                if (appState.isLoggedIn && (appState.currentUser.role === 'admin' || appState.currentUser.email === 'admin')) {
-                    openAdminModal();
-                } else {
-                    openAuthModal('login');
-                    document.getElementById('authEmailInput').value = 'admin';
-                    showToast('🛡️ โหมดแอดมินซ่อนตัว: กรุณากรอกรหัสผ่านแอดมิน', '🛡️');
-                }
+                appState.stealthAdminUnlocked = true;
+                updateHeaderAndLockUI();
+                openAdminModal(true);
+                showToast('🛡️ ปลดล็อกโหมด Stealth Admin สำเร็จ', '🛡️');
             }
         }
 
-        async function openAdminModal() {
-            if (!appState.isLoggedIn || (appState.currentUser.role !== 'admin' && appState.currentUser.email !== 'admin')) {
+        async function openAdminModal(focusCloudConfig = false) {
+            if (!isCurrentSessionAdmin()) {
                 return;
             }
+            document.getElementById('cloudModalErrorAlert').classList.add('hidden');
+            updateAdminCloudModalUI();
+            setCloudSyncStatus(appState.cloudStatus);
+            await renderAdminUsersList();
+            document.getElementById('adminControlModal').classList.remove('hidden');
 
+            if (focusCloudConfig) {
+                const textarea = document.getElementById('firebaseConfigTextarea');
+                if (textarea) setTimeout(() => textarea.focus(), 100);
+            }
+        }
+
+        async function renderAdminUsersList() {
             const emails = Object.keys(appState.usersRegistry);
             document.getElementById('adminTotalUsersCount').textContent = emails.length;
-            document.getElementById('adminSyncHealthStatus').textContent = appState.idbHealthy ? 'Synced ✓' : 'Local Only';
+            document.getElementById('adminSyncHealthStatus').textContent = appState.idbHealthy ? 'Healthy ✓' : 'Local Only';
 
             const container = document.getElementById('adminRegisteredUsersContainer');
             container.innerHTML = '';
@@ -2845,12 +3642,10 @@
                 `;
                 container.appendChild(card);
             }
-
-            document.getElementById('adminControlModal').classList.remove('hidden');
         }
 
         // =========================================================================
-        // 13. FULL DASHBOARD RENDERING (Balance, Budget, Goals, Chart, History)
+        // 14. FULL DASHBOARD RENDERING
         // =========================================================================
         function populateCategoryFilterDropdown() {
             const select = document.getElementById('filterCategorySelect');
@@ -2893,7 +3688,7 @@
             let totalExpense = 0;
             let currentMonthExpense = 0;
             let currentMonthIncome = 0;
-            const currentMonthPrefix = new Date().toISOString().slice(0, 7); // YYYY-MM
+            const currentMonthPrefix = new Date().toISOString().slice(0, 7);
 
             const categoryTotals = {};
             const monthlyCategoryTotals = {};
@@ -2916,24 +3711,14 @@
 
             const netBalance = totalIncome - totalExpense;
 
-            // Strictly ฿0.00 when not logged in
             document.getElementById('netBalanceDisplay').textContent = appState.isLoggedIn ? formatCurrencyValue(netBalance) : '฿0.00';
             document.getElementById('totalIncomeDisplay').textContent = appState.isLoggedIn ? formatCurrencyValue(totalIncome) : '฿0.00';
             document.getElementById('totalExpenseDisplay').textContent = appState.isLoggedIn ? formatCurrencyValue(totalExpense) : '฿0.00';
 
-            // Render Monthly Budget Bar (Emerald < 75%, Amber 75-99%, Rose >= 100%)
             renderMonthlyBudgetBar(currentMonthExpense);
-
-            // Render 1-Tap Quick Add Grid
             renderQuickAddGrid();
-
-            // Render Savings Goals
             renderSavingsGoalsList();
-
-            // Render Chart & Financial Insights
             renderAnalyticsAndInsights(categoryTotals, monthlyCategoryTotals, totalExpense, currentMonthExpense, currentMonthIncome);
-
-            // Render Filtered Transaction List
             renderTransactionsList();
         }
 
@@ -2949,7 +3734,7 @@
                     ? `รายจ่ายเดือนนี้ ${formatCurrencyValue(monthExpense)} (ยังไม่ได้ตั้งวงเงินงบประมาณ)`
                     : 'ใช้ไปเดือนนี้ ฿0.00 / ยังไม่ได้ตั้งงบ';
                 percentBadge.textContent = '0%';
-                percentBadge.className = 'font-bold text-slate-400';
+                percentBadge.className = 'font-bold text-slate-400 tabular-nums';
                 fillBar.style.width = '0%';
                 fillBar.className = 'h-full bg-emerald-500 transition-all duration-500';
                 alertMsg.classList.add('hidden');
@@ -2965,19 +3750,19 @@
 
             if (rawPercent >= 100) {
                 fillBar.className = 'h-full bg-rose-500 transition-all duration-500';
-                percentBadge.className = 'font-bold text-rose-400';
+                percentBadge.className = 'font-bold text-rose-400 tabular-nums';
                 alertMsg.textContent = `🚨 แจ้งเตือน: คุณใช้จ่ายเกินงบประมาณรายเดือนแล้ว (${formatCurrencyValue(monthExpense - budgetLimit)})`;
                 alertMsg.className = 'text-[11px] font-medium px-3 py-1.5 rounded-xl bg-rose-500/20 border border-rose-500/35 text-rose-200';
                 alertMsg.classList.remove('hidden');
             } else if (rawPercent >= 75) {
                 fillBar.className = 'h-full bg-amber-400 transition-all duration-500';
-                percentBadge.className = 'font-bold text-amber-300';
+                percentBadge.className = 'font-bold text-amber-300 tabular-nums';
                 alertMsg.textContent = `⚠️ ระวัง: ใช้จ่ายไปแล้ว ${rawPercent}% เหลืองบอีก ${formatCurrencyValue(budgetLimit - monthExpense)}`;
                 alertMsg.className = 'text-[11px] font-medium px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/35 text-amber-200';
                 alertMsg.classList.remove('hidden');
             } else {
                 fillBar.className = 'h-full bg-emerald-500 transition-all duration-500';
-                percentBadge.className = 'font-bold text-emerald-400';
+                percentBadge.className = 'font-bold text-emerald-400 tabular-nums';
                 alertMsg.classList.add('hidden');
             }
         }
@@ -2996,7 +3781,7 @@
                     ${(appState.isLoggedIn && isCustom) ? `<button type="button" onclick="removeCustomQuickButton('${item.id}', event)" class="absolute top-1 right-1.5 text-[10px] text-slate-500 hover:text-rose-400">✕</button>` : ''}
                     <span class="text-xl block">${item.emoji || '⚡'}</span>
                     <p class="text-[11px] font-semibold text-white mt-1 truncate">${item.label}</p>
-                    <p class="text-[10px] ${item.type === 'income' ? 'text-emerald-400' : 'text-indigo-300'} font-medium">
+                    <p class="text-[10px] ${item.type === 'income' ? 'text-emerald-400' : 'text-indigo-300'} font-medium tabular-nums">
                         ${item.type === 'income' ? '+' : ''}${formatCurrencyValue(item.amount)}
                     </p>
                 `;
@@ -3034,7 +3819,7 @@
                                 class="w-6 h-6 rounded-lg bg-slate-800 hover:bg-rose-500/30 text-slate-400 hover:text-rose-300 text-xs flex items-center justify-center cursor-pointer">✕</button>
                         </div>
                     </div>
-                    <div class="flex justify-between text-[11px] text-slate-400">
+                    <div class="flex justify-between text-[11px] text-slate-400 tabular-nums">
                         <span>ออมแล้ว <strong class="text-white">${formatCurrencyValue(goal.current)}</strong></span>
                         <span class="text-indigo-400 font-semibold">เป้าหมาย ${formatCurrencyValue(goal.target)} (${pct}%)</span>
                     </div>
@@ -3070,7 +3855,6 @@
             emptyOverlay.classList.add('hidden');
             insightBanner.classList.remove('hidden');
 
-            // Top spending category of the month (falls back to overall if none this month)
             const sourceMap = Object.keys(monthlyCategoryTotals).length > 0 ? monthlyCategoryTotals : allCategoryTotals;
             const sourceTotal = Object.keys(monthlyCategoryTotals).length > 0 ? monthExpense : totalExpense;
             let topCat = '';
@@ -3121,18 +3905,18 @@
                             position: 'right',
                             labels: {
                                 color: '#cbd5e1',
-                                font: { family: 'Prompt', size: 11 },
+                                font: { family: 'Plus Jakarta Sans, Noto Sans Thai', size: 11 },
                                 boxWidth: 10
                             }
                         }
                     },
                     scales: isDoughnut ? {} : {
                         x: {
-                            ticks: { color: '#94a3b8', font: { family: 'Prompt', size: 10 } },
+                            ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans, Noto Sans Thai', size: 10 } },
                             grid: { display: false }
                         },
                         y: {
-                            ticks: { color: '#94a3b8', font: { family: 'Prompt', size: 10 } },
+                            ticks: { color: '#94a3b8', font: { family: 'Plus Jakarta Sans, Noto Sans Thai', size: 10 } },
                             grid: { color: 'rgba(148, 163, 184, 0.1)' }
                         }
                     }
@@ -3186,7 +3970,7 @@
                         <p class="text-xs text-slate-400 truncate mt-0.5">${t.note || '-'}</p>
                     </div>
                     <div class="flex items-center shrink-0">
-                        <span class="text-sm font-bold ${isIncome ? 'text-emerald-400' : 'text-rose-400'}">
+                        <span class="text-sm font-bold tabular-nums ${isIncome ? 'text-emerald-400' : 'text-rose-400'}">
                             ${isIncome ? '+' : '-'}${formatCurrencyValue(t.amount)}
                         </span>
                         <div class="flex items-center space-x-1 ml-2.5">
@@ -3206,7 +3990,7 @@
         }
 
         // =========================================================================
-        // 14. TOAST NOTIFICATION HELPER
+        // 15. TOAST NOTIFICATION & GLOBAL WINDOW BINDINGS FOR MODULE SCOPE
         // =========================================================================
         function showToast(message, icon = '✅') {
             const banner = document.getElementById('toastBanner');
@@ -3216,10 +4000,74 @@
             clearTimeout(window._myWalletToastTimer);
             window._myWalletToastTimer = setTimeout(() => {
                 banner.classList.add('-translate-y-32', 'opacity-0');
-            }, 2800);
+            }, 3000);
         }
 
-        // Boot Application when DOM is ready
-        window.addEventListener('DOMContentLoaded', bootstrapApplication);
+        // Bind all UI handlers to window for ES module compatibility
+        Object.assign(window, {
+            handleAvatarClick,
+            handleStealthTitleTap,
+            openAdminModal,
+            handleInstallButtonClick,
+            togglePrivacyMode,
+            activatePinLockScreen,
+            handleHeaderAuthButtonClick,
+            openProfileModal,
+            openCustomConfirmModal,
+            openAuthModal,
+            openBudgetModal,
+            openCustomQuickAddModal,
+            handleSlipImageUpload,
+            handleCreateTransaction,
+            setNewTxType,
+            openCreateGoalModal,
+            switchChartType,
+            exportUserTransactionsToCSV,
+            renderTransactionsList,
+            clearTransactionFilters,
+            closeModalById,
+            switchAuthModalTab,
+            prefillRegisterFromNotFound,
+            handleAuthFormSubmit,
+            toggleAuthPasswordField,
+            updatePasswordStrengthMeter,
+            handleDemoOAuthLogin,
+            handleProfileSave,
+            removeAccountPin,
+            exportFullJsonBackup,
+            importFullJsonBackup,
+            handleEditTransactionSave,
+            setEditTxModalType,
+            handleConfirmSlipSave,
+            setSlipVerifyType,
+            saveBudgetLimit,
+            handleCreateGoal,
+            handleAddCustomQuickButton,
+            populateQuickBtnCategories,
+            triggerNativePwaInstall,
+            switchInstallGuideTab,
+            copyAppUrlAction,
+            executeConfirmedAction,
+            handlePinInputCheck,
+            appendPinDigit,
+            clearPinDigits,
+            backspacePinDigit,
+            logoutFromPinScreen,
+            handleSaveAndConnectFirebase,
+            triggerManualCloudSync,
+            disconnectFirebaseCloud,
+            depositIntoGoal,
+            triggerQuickAddItem,
+            removeCustomQuickButton,
+            openEditTransactionModal
+        });
+
+        // Boot Application
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', bootstrapApplication);
+        } else {
+            bootstrapApplication();
+        }
     </script>
 </body>
+</html>
